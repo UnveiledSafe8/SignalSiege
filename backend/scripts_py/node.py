@@ -33,6 +33,25 @@ class Node:
         self.nbrs = set()
         self.router_owner = router_owner
         self.controlled = router_owner
+    
+    def __repr__(self) -> str:
+        """
+        Returns an unambiguous string representation of the node for debugging.
+
+        Returns:
+            str: String summarizing the node's ID, controller, and router owner.
+        """
+        return f"<Node {self.id} | Controlled: {self.controlled} | Router: {self.router_owner}>"
+    
+    def has_router(self) -> bool:
+        """
+        Checks whether the node currently has a router installed.
+
+        Returns:
+            bool: True if a router is present (i.e., router_owner is not None), False otherwise.
+        """
+        
+        return self.router_owner is not None
 
     def capture(self, player: player.Player, router_bool: bool = False) -> None:
         """
@@ -53,7 +72,7 @@ class Node:
         if router_bool:
             self.router_owner = player
         self.controlled = player
-        player.score += 1
+        player.increment_score()
 
     def uncapture(self) -> None:
         """
@@ -68,7 +87,7 @@ class Node:
             raise ValueError(f"Cannot uncapture node '{self.id}' because it is not controlled.")
 
         controller = self.controlled
-        controller.score -= 1
+        controller.decrement_score()
         self.controlled = None
 
     def destroy(self) -> None:
@@ -83,6 +102,6 @@ class Node:
         if self.controlled is None:
             raise ValueError(f"Cannot destroy node '{self.id}' because it is not controlled.")
 
-        self.controlled.score -= 1
+        self.controlled.decrement_score()
         self.controlled = None
         self.router_owner = None

@@ -1,7 +1,7 @@
 import random
 from typing import Literal, Dict
 
-from backend.scripts_py import game_state, player, node
+from backend.scripts_py import player, node
 
 class AI:
     """
@@ -33,7 +33,7 @@ class AI:
         self.color = player.color
         self.difficulty = difficulty
     
-    def AI_move(self, graph: Dict[str, node.Node]) -> str:
+    def AI_move(self, moves) -> str:
         """
         Chooses a move based on the AI difficulty level.
         
@@ -55,10 +55,10 @@ class AI:
         if self.difficulty not in bot_difficulty_moves:
             raise ValueError(f"Invalid AI difficulty level '{self.difficulty}'. Choose from: {', '.join(bot_difficulty_moves)}.")
         
-        return bot_difficulty_moves[self.difficulty](graph)
+        return bot_difficulty_moves[self.difficulty](moves)
         
     
-    def _easy_move(self, graph: Dict[str, node.Node]) -> str:
+    def _easy_move(self, moves) -> str:
         """
         Selects a random valid move from the available ones (easy AI).
         
@@ -69,7 +69,6 @@ class AI:
             str: The ID of the randomly chosen node, or "pass".
         """
 
-        moves = game_state.get_possible_moves(graph, self.player)
         return random.choice(list(moves)) if moves else "pass"
 
     def _medium_move(self, graph: Dict[str, node.Node]) -> str:

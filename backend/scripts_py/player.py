@@ -10,9 +10,12 @@ class Player:
         color (str): The player's color.
         score (int): The player's current score.
         opponent (Player | None): The opposing player, if assigned.
-    
+
     Public Methods:
-        None
+        set_opponent(opponent): Assign an opponent to this player.
+        get_opponent(): Retrieve the opponent of this player.
+        increment_score(amount=1): Increase the player's score.
+        decrement_score(amount=1): Decrease the player's score.
     """
 
     def __init__(self, color: str, score: int = 0):
@@ -26,4 +29,67 @@ class Player:
         
         self.color = color
         self.score = score
-        self.opponent = None
+        self._opponent = None
+    
+    def __repr__(self) -> str:
+        """
+        Returns an unambiguous string representation of the player.
+
+        Returns:
+            str: A detailed representation with color, score, and opponent info.
+        """
+         
+        return f"Player(color={self.color!r}, score={self.score}, opponent={self.opponent.color if self.opponent else None!r})"
+    
+    def __str__(self) -> str:
+        """
+        Returns a readable string representation of the player.
+
+        Returns:
+            str: A simple description of the player and their score.
+        """
+
+        return f"Player({self.color}, Score: {self.score})"
+    
+    def set_opponent(self, opponent: "Player") -> None:
+        """
+        Assigns an opponent to this player.
+
+        Args:
+            opponent (Player): The opponent to assign.
+        """
+
+        self._opponent = opponent
+    
+    def get_opponent(self) -> "Player | None":
+        """
+        Retrieves the opponent of this player.
+
+        Returns:
+            Player | None: The assigned opponent, if any.
+        """
+
+        return self._opponent
+
+    def increment_score(self, amount: int = 1) -> None:
+        """
+        Increments the player's score.
+
+        Args:
+            amount (int, optional): The amount to increment by. Defaults to 1.
+        """
+
+        self.score += amount
+
+    def decrement_score(self, amount: int = 1) -> None:
+        """
+        Decrements the player's score.
+
+        Args:
+            amount (int, optional): The amount to decrement by. Defaults to 1.
+        """
+
+        if self.score - amount < 0:
+            raise ValueError(f"Player {self.color} score underflow.")
+        
+        self.score -= amount

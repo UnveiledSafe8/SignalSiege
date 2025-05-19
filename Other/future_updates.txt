@@ -1,5 +1,0 @@
-1. Frontend
-2. Better AI
-3. Encapsulate Game State as a class
-4. comments on code
-5. Move print board and print score in utils as __str__ method in game state class
