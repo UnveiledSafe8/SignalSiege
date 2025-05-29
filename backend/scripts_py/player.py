@@ -39,7 +39,7 @@ class Player:
             str: A detailed representation with color, score, and opponent info.
         """
          
-        return f"Player(color={self.color!r}, score={self.score}, opponent={self.opponent.color if self.opponent else None!r})"
+        return f"Player(color={self.color!r}, score={self.score}, opponent={self._opponent.color if self._opponent else None!r})"
     
     def __str__(self) -> str:
         """

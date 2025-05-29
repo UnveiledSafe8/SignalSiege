@@ -1,5 +1,8 @@
 1. Advanced Frontend
 2. Better AI
 3. comments on code
-4. Add playing with self functionality
-5. Fix difficulty assigments
+4. Fix difficulty assigments
+
+Bugs:
+1. Clean and Optimize Code
+2. Tweak Updating territory control

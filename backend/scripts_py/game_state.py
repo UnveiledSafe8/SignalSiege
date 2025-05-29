@@ -1,5 +1,6 @@
 from typing import Literal, Optional
 from collections import defaultdict, deque
+import copy
 
 from backend.scripts_py import utils, player, node, constants, AI
 
@@ -31,7 +32,7 @@ class GameState:
         - valid_placement(node_id: str) -> bool: Determines if a router can be placed at the node.
     """
 
-    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"], height: int, width: int, full: bool = True):
+    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"], height: int = 5, width: int = 5, full: bool = True):
         """
         Initializes the game state with players, AI, board graph, and komi scoring.
 
@@ -61,11 +62,15 @@ class GameState:
             pass
         else:
             raise ValueError(f"Invalid difficulty inputted")
+        
+        self.difficulty = difficulty
 
         self.komi = utils.compute_komi(difficulty, height, width)
         self.players[constants.colors[1]].increment_score(self.komi)
 
         self.graph = utils.generate_map(height, width, full)
+        self.height = height
+        self.width = width
 
         self.passes = 0
     
@@ -97,6 +102,20 @@ class GameState:
             board_rows.append(f"{row_idx:<2} " + " ".join(row))
         score_line = " | ".join(f"{p.color}: {p.score}" for p in self.players.values())
         return "\n".join([col_labels, *board_rows, "", score_line])
+    
+    def __deepcopy__(self, memo):
+        copied_game = GameState(self.difficulty)
+        copied_game.graph = copy.deepcopy(self.graph, memo)
+        copied_game._turns = copy.deepcopy(self._turns, memo)
+        copied_game.passes = self.passes
+        copied_game.komi = self.komi
+        copied_game.height = self.height
+        copied_game.width = self.width
+        copied_game.players = {color: copy.deepcopy(plyer, memo) for color, plyer in self.players.items()}
+        copied_game.ai_players = [copied_game.players[ai.color] for ai in self.ai_players]
+        copied_game.ai_controllers = [AI.AI(copied_game.players[controller.color], controller.difficulty) for controller in self.ai_controllers]
+
+        return copied_game
     
     
     def get_player_turn(self) -> player.Player:
@@ -131,7 +150,7 @@ class GameState:
         
         curr_ai = self.get_player_turn()
         controller = self.ai_controllers[self.ai_players.index(curr_ai)]
-        return controller.AI_move(self.get_possible_moves())
+        return controller.AI_move(copy.deepcopy(self))
     
     def take_turn(self) -> None:
         """
@@ -227,7 +246,7 @@ class GameState:
         if controlled and len(routers_owners_found) > 1:
             for node_id in visited:
                 self.graph[node_id].uncapture()
-        elif not controlled and len(routers_owners_found) == 1 and max(potential_border.values()) < 3 and len(visited) < len(self.graph) - 4: #len(visited) < len(graph) - 4 corners
+        elif not controlled and len(routers_owners_found) == 1 and len(visited) < len(self.graph) - 3:
             for node_id in visited:
                 self.graph[node_id].capture(next(iter(routers_owners_found)), False)
 

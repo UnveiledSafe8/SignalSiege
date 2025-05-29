@@ -1,58 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Router Placement Game</title>
+    <title>SignalSiege</title>
+    <link rel="stylesheet" href="../static/styles/homepage.css">
 </head>
 <body>
-    <h1>Router Placement Game</h1>
-
-    <button onclick="startGame()">Start Game</button>
-    <br><br>
-
-    <input type="text" id="moveInput" placeholder="Enter move (e.g., 3.4 or pass)">
-    <button onclick="makeMove()">Make Move</button>
-
-    <h2>Game State:</h2>
-    <pre id="gameState">Press "Start Game" to begin.</pre>
-
-    <script>
-    function startGame() {
-        fetch('http://127.0.0.1:5000/start', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                game_id: 'game1',
-                difficulty: 'self',
-                height: 8,
-                width: 8
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Game started:", data);
-            document.getElementById("gameState").innerText = data.state;
-        })
-        .catch(err => console.error(err));
-    }
-
-    function makeMove() {
-        const move = document.getElementById("moveInput").value;
-        fetch('http://127.0.0.1:5000/move/game1', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ move })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Move made:", data);
-            document.getElementById("gameState").innerText = data.state;
-        })
-        .catch(err => console.error(err));
-    }
-    </script>
+    <script defer src="../static/javascript/homepage.js"></script>
+    <div id="content-wrapper">
+        <h1>Signal Siege</h1>
+        <div id="menu">
+            <ul>
+                <li><button type="button" id="play-button">Play</button></li>
+                <li><button type="button" id="stats-button">Stats</button></li>
+                <li><button type="button" id="how-button">How To Play</button></li>
+                <li><button type="button" id="settings-button">Settings</button></li>
+            </ul>
+        </div>
+    </div>
 </body>
 </html>

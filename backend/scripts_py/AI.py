@@ -1,5 +1,10 @@
 import random
-from typing import Literal, Dict
+import copy
+import math
+from typing import Literal, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.scripts_py import game_state
 
 from backend.scripts_py import player, node
 
@@ -33,7 +38,7 @@ class AI:
         self.color = player.color
         self.difficulty = difficulty
     
-    def AI_move(self, moves) -> str:
+    def AI_move(self, copied_game: "game_state.GameState") -> str:
         """
         Chooses a move based on the AI difficulty level.
         
@@ -55,10 +60,9 @@ class AI:
         if self.difficulty not in bot_difficulty_moves:
             raise ValueError(f"Invalid AI difficulty level '{self.difficulty}'. Choose from: {', '.join(bot_difficulty_moves)}.")
         
-        return bot_difficulty_moves[self.difficulty](moves)
-        
+        return bot_difficulty_moves[self.difficulty](copied_game)  
     
-    def _easy_move(self, moves) -> str:
+    def _easy_move(self, copied_game: "game_state.GameState") -> str:
         """
         Selects a random valid move from the available ones (easy AI).
         
@@ -69,9 +73,46 @@ class AI:
             str: The ID of the randomly chosen node, or "pass".
         """
 
-        return random.choice(list(moves)) if moves else "pass"
+        WEIGHT_SCORE_DIFF = 5
+        WEIGHT_NEIGHBOR_OWNED = 2
+        WEIGHT_NEIGHBOR_ENEMY = -3
+        WEIGHT_BORDER = -1
 
-    def _medium_move(self, graph: Dict[str, node.Node]) -> str:
+        moves = copied_game.get_possible_moves()
+        ranked_moves = []
+        for move in moves:
+            curr_game = copy.deepcopy(copied_game)
+            curr_game.place_router(move)
+
+            player_self = curr_game.players[self.color]
+
+            rank = 5 * (curr_game.height * curr_game.width)
+
+            rank += WEIGHT_SCORE_DIFF * (player_self.score - player_self._opponent.score)
+
+            y_str, x_str = move.split(".")
+
+            if int(y_str) == curr_game.height - 1 or int(x_str) == curr_game.width - 1:
+                rank += WEIGHT_BORDER
+
+            for nbr in curr_game.graph[move].nbrs:
+                if curr_game.graph[nbr].router_owner == player_self:
+                    rank += WEIGHT_NEIGHBOR_OWNED
+                elif curr_game.graph[nbr].router_owner == player_self._opponent:
+                    rank += WEIGHT_NEIGHBOR_ENEMY
+
+            ranked_moves.append((rank, move))
+
+        max_rank = max(rank for rank, _ in ranked_moves)
+        exp_ranks = [math.exp(rank - max_rank) for rank, _ in ranked_moves]
+        total = sum(exp_ranks)
+
+        moves = [move[1] for move in ranked_moves]
+        weights = [e/total for e in exp_ranks]
+
+        return random.choices(moves, weights, k=1)[0] if moves else "pass"
+
+    def _medium_move(self, moves) -> str:
         """
         Medium difficulty move logic placeholder.
 

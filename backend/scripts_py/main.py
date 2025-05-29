@@ -21,6 +21,10 @@ def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "ver
 
     game = game_state.GameState(difficulty, height, width, full)
     games[game_id] = game
+    
+    if game.is_Ai_turn():
+        make_ai_move(game)
+
     return game
 
 def get_game(game_id: str) -> Optional[game_state.GameState]:
