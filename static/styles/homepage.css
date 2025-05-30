@@ -52,6 +52,7 @@ body {
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
     border: 12px ridge var(--primary-color);
+    scroll-behavior: smooth;
 }
 
 #content-wrapper {

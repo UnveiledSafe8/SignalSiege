@@ -1,10 +1,11 @@
 from typing import Literal, Optional
+import random
 
 from backend.scripts_py import game_state
 
 games = {}
 
-def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"], height: int, width: int, full: bool = True) -> game_state.GameState:
+def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self", "random"], height: int, width: int, full: bool = True) -> game_state.GameState:
     """
     Initializes and stores a new GameState instance.
 
@@ -18,6 +19,8 @@ def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "ver
     Returns:
         GameState: The initialized game instance.
     """
+    if difficulty == "random":
+        difficulty = random.choice(["easy", "medium", "hard", "very hard", "insane"])
 
     game = game_state.GameState(difficulty, height, width, full)
     games[game_id] = game
@@ -97,3 +100,6 @@ def is_game_over(game: game_state.GameState) -> bool:
     """
 
     return game.passes >= 2
+
+def get_game_summary(game: game_state.GameState):
+    pass
