@@ -5,11 +5,10 @@ const fullInput = document.querySelector("input[type='checkbox']");
 const board = document.getElementById("board-display");
 const submitBtn = document.querySelector('button[type="submit"]');
 const form = document.getElementById("game-settings");
-const humanBtn = document.querySelector('input[value="human"]');
 const computerBtn = document.querySelector('input[value="computer"]');
 const localBtn = document.querySelector('input[value="local"]');
 const opponentRadioGroup = document.getElementById("opponent-radio-group");
-const radioGroup = [humanBtn, computerBtn, localBtn];
+const radioGroup = [computerBtn, localBtn];
 const computerDifficultyInput = document.querySelector('select[name="difficulty"]');
 
 const maxHeight = 25;
@@ -20,7 +19,7 @@ const minWidth = 3;
 backBtn.addEventListener("click", () => {
     let splitURL = window.location.pathname.split("/");
     splitURL.pop();
-    splitURL.push("index.html");
+    splitURL.push("");
     splitURL = splitURL.join("/");
     redirectSmooth(splitURL);
 });
@@ -52,6 +51,33 @@ submitBtn.addEventListener("click", async (e) => {
 
     localStorage.setItem("game-settings", JSON.stringify(data));
 
+    let gameId = null;
+    fetch("/init", {
+        method: "GET",
+        headers: {
+    "Content-Type": "application/json"
+  }
+    })
+        .then(response => response.json())
+        .then(newData => {
+            gameId = newData.game_id;
+
+            return fetch(`/${gameId}/create`, {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            let url = window.location.href.split("/");
+            url.pop();
+            url.push(`game?game_id=${gameId}`);
+            window.location.href = url.join("/");
+        });
+    
 });
 document.addEventListener("mousemove", (e) => {
   const trail = document.createElement("div");
@@ -117,10 +143,7 @@ if (rawData) {
     heightInput.value = currData.height;
     widthInput.value = currData.width;
     fullInput.checked = currData.full;
-    if (currData.opponent === humanBtn.value) {
-        humanBtn.checked = true;
-        updateAdditionalSettingsDisplay("human");
-    } else if (currData.opponent === localBtn.value) {
+    if (currData.opponent === localBtn.value) {
         localBtn.checked = true;
         updateAdditionalSettingsDisplay("local");
     } else {
@@ -132,7 +155,7 @@ if (rawData) {
     heightInput.value = 10;
     widthInput.value = 10;
     fullInput.checked = true;
-    humanBtn.checked = true;
+    computerBtn.checked = true;
     computerDifficultyInput.style.opacity = 0;
     computerDifficultyInput.value = "";
 };

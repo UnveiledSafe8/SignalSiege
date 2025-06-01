@@ -22,7 +22,7 @@ document.addEventListener("mousemove", (e) => {
 playBtn.addEventListener("click", () => {
     let splitURL = window.location.pathname.split("/");
     splitURL.pop();
-    splitURL.push("play.html");
+    splitURL.push("play");
     splitURL = splitURL.join("/");
     redirectSmooth(splitURL);
 });

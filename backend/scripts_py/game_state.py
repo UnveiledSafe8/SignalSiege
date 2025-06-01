@@ -92,7 +92,7 @@ class GameState:
             if nde.router_owner:
                 char = nde.router_owner.color[0].upper()
             elif nde.controlled:
-                char = "+"
+                char = nde.controlled.color[0].lower()
             else:
                 char = "."
             game_board[y].append(char)
@@ -316,3 +316,28 @@ class GameState:
 
         self.take_turn()
         return True
+    
+    def game_summary(self):
+        game_board = []
+
+        for node_id in self.graph:
+            y, x = map(int, node_id.split("."))
+            while y >= len(game_board):
+                game_board.append([])
+            nde = self.graph[node_id]
+            if nde.router_owner:
+                char = nde.router_owner.color[0].upper()
+            elif nde.controlled:
+                char = nde.controlled.color[0].lower()
+            else:
+                char = "."
+            game_board[y].append(char)
+        scores = {p.color: p.score for p in self.players.values()}
+        human_players_colors = []
+        ai_players_colors = []
+        for player in self.players.keys():
+            if player not in [ai.color for ai in self.ai_players]:
+                human_players_colors.append(player)
+            else:
+                ai_players_colors.append(player)
+        return game_board, scores, self.difficulty, human_players_colors, ai_players_colors

@@ -2,10 +2,10 @@
 <html>
 <head>
     <title>SignalSiege</title>
-    <link rel="stylesheet" href="./styles/play.css">
+    <link rel="stylesheet" href="/static/styles/play.css">
 </head>
 <body>
-    <script defer src="./javascript/play.js"></script>
+    <script defer src="/static/javascript/play.js"></script>
     <div id="content-wrapper">
         <button type="button">Back</button>
         <form id="game-settings" method="post">
@@ -22,7 +22,6 @@
                 <legend>Choose Opponent</legend>
                 <div class="fieldset-wrapper">
                     <label>Computer<input type="radio" name="opponent" value="computer"></label>
-                    <label>Human<input type="radio" name="opponent" value="human"></label>
                     <label>Local<input type="radio" name="opponent" value="local"></label>
                 </div>
                 <select name="difficulty">

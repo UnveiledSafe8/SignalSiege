@@ -3,9 +3,7 @@ import random
 
 from backend.scripts_py import game_state
 
-games = {}
-
-def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self", "random"], height: int, width: int, full: bool = True) -> game_state.GameState:
+def create_game(difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self", "random"], height: int, width: int, full: bool = True) -> game_state.GameState:
     """
     Initializes and stores a new GameState instance.
 
@@ -23,25 +21,8 @@ def create_game(game_id: str, difficulty: Literal["easy", "medium", "hard", "ver
         difficulty = random.choice(["easy", "medium", "hard", "very hard", "insane"])
 
     game = game_state.GameState(difficulty, height, width, full)
-    games[game_id] = game
-    
-    if game.is_Ai_turn():
-        make_ai_move(game)
 
     return game
-
-def get_game(game_id: str) -> Optional[game_state.GameState]:
-    """
-    Retrieves a game instance by its ID.
-
-    Args:
-        game_id (str): The game identifier.
-
-    Returns:
-        GameState or None: The game object or None if not found.
-    """
-
-    return games.get(game_id)
 
 def make_player_move(game: game_state.GameState, move: str) -> bool:
     """
@@ -101,5 +82,5 @@ def is_game_over(game: game_state.GameState) -> bool:
 
     return game.passes >= 2
 
-def get_game_summary(game: game_state.GameState):
-    pass
+def get_game_summary(game):
+    return game.game_summary()

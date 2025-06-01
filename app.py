@@ -1,5 +1,72 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
+from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.scripts_py import main
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+class GameConfig(BaseModel):
+    height: int
+    width: int
+    full: bool
+    opponent: str
+    difficulty: str
+
+class GameState(BaseModel):
+    game_state: str
+
+class PlayerMove(BaseModel):
+    move: str
+
+games = []
+
+@app.get("/")
+def serve_home():
+    return FileResponse("static/index.html")
+
+@app.get("/play")
+def serve_play():
+    return FileResponse("static/play.html")
+
+@app.get("/game")
+def serve_play():
+    return FileResponse("static/game.html")
+
+@app.get("/init")
+def init_game():
+    #database added later for processing ids
+    return {"game_id": 0}
+
+@app.post("/{game_id}/create")
+async def create_game(game_id: int, config: GameConfig):
+    if config.opponent == "local":
+        config.difficulty = "self"
+    game = main.create_game(config.difficulty, config.height, config.width, config.full)
+    games.append(game)
+    board, scores, difficulty, human_players, ai_players = main.get_game_summary(game)
+    return {"board": board, "scores": scores, "difficulty": difficulty, "human_players": human_players, "ai_players": ai_players}
+
+@app.get("/{game_id}/start")
+async def start_game(game_id, background_tasks: BackgroundTasks):
+    game = games[int(game_id)]
+    background_tasks.add_task(main.make_ai_move, game)
+    return {"game_start": True}
+
+@app.put("/{game_id}/move")
+async def player_move(game_id: int, move: PlayerMove, background_tasks: BackgroundTasks):
+    game = games[0]
+    valid_move = main.make_player_move(game, move.move) and not main.is_game_over(game)
+    if valid_move:
+        background_tasks.add_task(main.make_ai_move, game)
+    board, scores, difficulty, human_players, ai_players = main.get_game_summary(game)
+    return {"valid_move": valid_move, "board": board, "scores": scores, "difficulty": difficulty, "human_players": human_players, "ai_players": ai_players}
+
+@app.get("/{game_id}/state")
+def get_game_state(game_id: int):
+    game = games[0]
+    board, scores, difficulty, human_players, ai_players = main.get_game_summary(game)
+    return {"board": board, "scores": scores, "difficulty": difficulty, "human_players": human_players, "ai_players": ai_players}
