@@ -1,0 +1,112 @@
+:root {
+    --primary-color: #0c0;
+    --primary-dark-color: #090;
+    --secondary-color: black;
+    --text-color: #888;
+    --text-color-dark: #666;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes title-pulse {
+    from {
+        text-shadow: 0 0 20px var(--primary-color);
+    }
+
+    to {
+        text-shadow: 0 0 25px var(--primary-dark-color);
+    }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: clamp(0.875rem, 1vw, 2rem);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--secondary-color);
+    cursor: crosshair;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+    border: 12px ridge var(--primary-color);
+    scroll-behavior: smooth;
+}
+
+#content-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fade-in 1s ease-in;
+}
+
+h1 {
+    font-size: 8em;
+    margin-bottom: 8%;
+    color: var(--primary-color);
+    text-shadow: 0 0 20px var(--primary-color);
+    animation-delay: 300ms;
+    animation: title-pulse 2s ease-out infinite;
+}
+
+li {
+    margin-bottom: 8%;
+    list-style: none;
+    text-align: center;
+}
+
+button {
+    font-size: 3em;
+    padding: 0.1em 0.5em;
+    color: var(--text-color);
+    background: none;
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+    transform: scale(1.1);
+    cursor: pointer;
+    border-bottom-color: var(--primary-dark-color);
+    color: var(--text-color-dark);
+}
+
+.trail {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-color);
+    pointer-events: none;
+    opacity: 0.8;
+    animation: fadeOut 1s forwards;
+}

@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres 
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=portfolio_database
+    volumes:
+      - signal_siege_db:/var/lib/postgresql/data
+    restart: always
+  
+  app:
+    build: .
+    container_name: app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  signal_siege_db:
+    driver: local

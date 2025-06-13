@@ -1,0 +1,203 @@
+:root {
+  --primary-color: #0c0;
+  --primary-dark-color: #090;
+  --secondary-color: black;
+  --text-color: #888;
+  --text-color-dark: #666;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  background-color: var(--secondary-color);
+  cursor: crosshair;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  border: 12px ridge var(--primary-color);
+  scroll-behavior: smooth;
+}
+
+#content-wrapper {
+  padding: 5%;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#board {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-evenly;
+  height: 70%;
+  margin: 0 auto;
+  aspect-ratio: 1;
+}
+
+.row {
+  display: flex;
+  justify-content: space-evenly;
+  flex: 1;
+}
+
+.node {
+  flex: 1;
+  position: relative;
+  border: none;
+  cursor: crosshair;
+  background: none;
+  aspect-ratio: 1;
+  min-height: 60px;
+}
+
+.node:not(.empty)::after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  background-color: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.node.white::after {
+  background-color: violet;
+}
+
+.node.black::after {
+  background-color: var(--primary-color);
+}
+
+.nodeId {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: white;
+  text-align: left;
+  display: none;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid white;
+  height: 50px;
+  width: 50px;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#controls {
+  display: flex;
+  gap: 5%;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+#startButton {
+  font-size: 2em;
+  border: 4px ridge var(--primary-dark-color);
+  color: var(--text-color);
+  background: none;
+  display: inline-block;
+  text-align: center;
+  padding: 0.1em 0.5em;
+}
+
+#startButton:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+  border-bottom-color: var(--primary-dark-color);
+  color: var(--text-color-dark);
+}
+
+#passButton {
+  font-size: 2em;
+  border: 4px ridge var(--primary-dark-color);
+  color: var(--text-color);
+  background: none;
+  display: inline-block;
+  text-align: center;
+  padding: 0.1em 0.5em;
+  display: none;
+}
+
+#passButton:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+  border-bottom-color: var(--primary-dark-color);
+  color: var(--text-color-dark);
+}
+
+#newSubnet {
+  font-size: 2em;
+  border: 4px ridge var(--primary-dark-color);
+  color: var(--text-color);
+  background: none;
+  display: inline-block;
+  text-align: center;
+  padding: 0.1em 0.5em;
+  display: none;
+}
+
+#newSubnet:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+  border-bottom-color: var(--primary-dark-color);
+  color: var(--text-color-dark);
+}
+
+.rock {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid white;
+  height: 50px;
+  width: 50px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  box-shadow: 0 0 3px 3px rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.rock.white {
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #eee 50%, #ccc 100%);
+}
+
+.rock.black {
+  background: radial-gradient(circle at 30% 30%, #333 0%, black 50%, #111 100%);
+}
+
+#scores {
+  color: var(--primary-color);
+  font-family: inherit;
+  text-align: center;
+  font-size: 2em;
+}
+
+#title {
+  color: var(--primary-color);
+  text-align: center;
+  font-size: 1.8em;
+}
+
+/*# sourceMappingURL=game.css.map */
