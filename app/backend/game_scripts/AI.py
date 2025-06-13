@@ -37,6 +37,9 @@ class AI:
         self.player = player
         self.color = player.color
         self.difficulty = difficulty
+
+    def to_dict(self):
+        return {"player": self.player.to_dict(), "color": self.color, "difficulty": self.difficulty}
     
     def AI_move(self, copied_game: "game_state.GameState") -> str:
         """
@@ -88,7 +91,7 @@ class AI:
 
             rank = 5 * (curr_game.height * curr_game.width)
 
-            rank += WEIGHT_SCORE_DIFF * (player_self.score - player_self._opponent.score)
+            rank += WEIGHT_SCORE_DIFF * (player_self.score - curr_game.players[player_self.get_opponent()].score)
 
             y_str, x_str = move.split(".")
 

@@ -11,9 +11,9 @@ const localBtn = document.querySelector('input[value="local"]');
 const opponentRadioGroup = document.getElementById("opponent-radio-group");
 const radioGroup = [computerBtn, localBtn];
 const computerDifficultyInput = document.querySelector('select[name="difficulty"]');
-const maxHeight = 25;
+const maxHeight = 20;
 const minHeight = 3;
-const maxWidth = 25;
+const maxWidth = 20;
 const minWidth = 3;
 backBtn.addEventListener("click", () => {
     let splitURL = window.location.pathname.split("/");
@@ -33,7 +33,6 @@ submitBtn.addEventListener("click", async (e) => {
         "height": Number(formData.get("height")),
         "width": Number(formData.get("width")),
         "full": formData.get("full") ? true : false,
-        "opponent": formData.get("opponent"),
         "difficulty": formData.get("difficulty")
     };
     if (isNaN(data.height) || data.height > maxHeight || data.height < minHeight) {
@@ -51,25 +50,16 @@ submitBtn.addEventListener("click", async (e) => {
     ;
     localStorage.setItem("game-settings", JSON.stringify(data));
     let gameId = null;
-    fetch("/init", {
-        method: "GET",
+    fetch("/create-game", {
+        method: "POST",
         headers: {
             "Content-Type": "application/json"
-        }
+        },
+        body: JSON.stringify({ height: data.height, width: data.width, full: data.full, difficulty: data.difficulty })
     })
         .then(response => response.json())
         .then(newData => {
         gameId = newData.game_id;
-        return fetch(`/${gameId}/create`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-    })
-        .then(response => response.json())
-        .then(() => {
         let url = window.location.href.split("/");
         url.pop();
         url.push(`game?game_id=${gameId}`);
@@ -132,9 +122,9 @@ function redirectSmooth(targetPage) {
     }, 300);
 }
 ;
-rawData = localStorage.getItem("game-settings");
+const rawData = localStorage.getItem("game-settings");
 if (rawData) {
-    currData = JSON.parse(rawData);
+    const currData = JSON.parse(rawData);
     heightInput.value = currData.height;
     widthInput.value = currData.width;
     fullInput.checked = currData.full;

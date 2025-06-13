@@ -39,7 +39,7 @@ class Player:
             str: A detailed representation with color, score, and opponent info.
         """
          
-        return f"Player(color={self.color!r}, score={self.score}, opponent={self._opponent.color if self._opponent else None!r})"
+        return f"Player(color={self.color!r}, score={self.score}, opponent={self._opponent if self._opponent else None!r})"
     
     def __str__(self) -> str:
         """
@@ -50,6 +50,9 @@ class Player:
         """
 
         return f"Player({self.color}, Score: {self.score})"
+    
+    def to_dict(self):
+        return {"color": self.color, "score": self.score, "opponent": self._opponent}
     
     def set_opponent(self, opponent: "Player") -> None:
         """

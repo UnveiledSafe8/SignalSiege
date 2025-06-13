@@ -52,16 +52,12 @@ class GameState:
         self.ai_players = []
         self.ai_controllers = []
 
-        self.players[colors[0]].set_opponent(self.players[colors[1]])
-        self.players[colors[1]].set_opponent(self.players[colors[0]])
+        self.players[colors[0]].set_opponent(colors[1])
+        self.players[colors[1]].set_opponent(colors[0])
 
-        if difficulty in ["easy", "medium", "hard", "very hard", "insane"]:
+        if difficulty != "self":
             self.ai_controllers.append(AI.AI(self.players[colors[1]], difficulty))
             self.ai_players.append(self.players[colors[1]])
-        elif difficulty == "self":
-            pass
-        else:
-            raise ValueError(f"Invalid difficulty inputted")
         
         self.difficulty = difficulty
 
@@ -90,9 +86,9 @@ class GameState:
                 game_board.append([])
             nde = self.graph[node_id]
             if nde.router_owner:
-                char = nde.router_owner.color[0].upper()
+                char = nde.router_owner[0].upper()
             elif nde.controlled:
-                char = nde.controlled.color[0].lower()
+                char = nde.controlled[0].lower()
             else:
                 char = "."
             game_board[y].append(char)
@@ -117,6 +113,10 @@ class GameState:
 
         return copied_game
     
+    def to_dict(self):
+        return {"turns": self._turns,"players": {color: plyer.to_dict() for color, plyer in self.players.items()}, "ai_players": [ai.to_dict for ai in self.ai_players], 
+                "ai_controllers": [ai.to_dict() for ai in self.ai_controllers], "difficulty": self.difficulty, "komi": self.komi, 
+                "graph": {nde_id: nde.to_dict() for nde_id, nde in self.graph.items()}, "height": self.height, "width": self.width, "passes": self.passes}
     
     def get_player_turn(self) -> player.Player:
         """
@@ -209,6 +209,7 @@ class GameState:
 
         opponent = start_node.router_owner
         queue = deque([start_node])
+        self.players[start_node.router_owner].decrement_score()
         start_node.destroy()
         while queue:
             curr_node = queue.popleft()
@@ -216,6 +217,7 @@ class GameState:
                 nbr_node = self.graph[nbr_id]
                 if nbr_node.router_owner == opponent:
                     queue.append(nbr_node)
+                    self.players[nbr_node.router_owner].decrement_score()
                     nbr_node.destroy()
 
     def update_territory_control(self, start_node: node.Node) -> None:
@@ -238,13 +240,14 @@ class GameState:
                 if nbr_id not in visited:
                     nbr_node = self.graph[nbr_id]
                     if nbr_node.router_owner:
-                        routers_owners_found.add(nbr_node.router_owner)
+                        routers_owners_found.add(self.players[nbr_node.router_owner])
                         potential_border[nbr_node] += 1
                     else:
                         visited.add(nbr_id)
                         queue.append(nbr_node)
         if controlled and len(routers_owners_found) > 1:
             for node_id in visited:
+                self.players[self.graph[node_id].controlled].decrement_score()
                 self.graph[node_id].uncapture()
         elif not controlled and len(routers_owners_found) == 1 and len(visited) < len(self.graph) - 3:
             for node_id in visited:
@@ -284,7 +287,7 @@ class GameState:
 
         nde = self.graph[node_id]
         curr_player = self.get_player_turn()
-        return not nde.has_router() and (self.group_has_liberties(nde, curr_player) or self.is_group_capturable(nde, curr_player))
+        return not nde.has_router() and (self.group_has_liberties(nde, curr_player.color) or self.is_group_capturable(nde, curr_player))
     
     def place_router(self, node_id: str) -> bool:
         """
@@ -316,28 +319,3 @@ class GameState:
 
         self.take_turn()
         return True
-    
-    def game_summary(self):
-        game_board = []
-
-        for node_id in self.graph:
-            y, x = map(int, node_id.split("."))
-            while y >= len(game_board):
-                game_board.append([])
-            nde = self.graph[node_id]
-            if nde.router_owner:
-                char = nde.router_owner.color[0].upper()
-            elif nde.controlled:
-                char = nde.controlled.color[0].lower()
-            else:
-                char = "."
-            game_board[y].append(char)
-        scores = {p.color: p.score for p in self.players.values()}
-        human_players_colors = []
-        ai_players_colors = []
-        for player in self.players.keys():
-            if player not in [ai.color for ai in self.ai_players]:
-                human_players_colors.append(player)
-            else:
-                ai_players_colors.append(player)
-        return game_board, scores, self.difficulty, human_players_colors, ai_players_colors

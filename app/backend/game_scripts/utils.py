@@ -1,8 +1,7 @@
-from collections import deque, defaultdict
 from typing import Dict, Literal
 import random
 
-from backend.game_scripts import node, player, constants
+from backend.game_scripts import node, constants
 
 def generate_map(height: int, width: int, full: bool = True) -> Dict[str, node.Node]:
     """

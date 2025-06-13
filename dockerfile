@@ -6,4 +6,4 @@ WORKDIR /home/app
 
 RUN pip install -r /home/app/requirements.txt
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "backend.scripts_py.app:app", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "backend.API.app:app", "--bind", "0.0.0.0:8000"]
