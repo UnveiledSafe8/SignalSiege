@@ -18,7 +18,7 @@ class Player:
         decrement_score(amount=1): Decrease the player's score.
     """
 
-    def __init__(self, color: str, score: int = 0):
+    def __init__(self, color: str = None, score: int = 0, opponent: str = None):
         """
         Initializes a Player instance.
 
@@ -29,7 +29,7 @@ class Player:
         
         self.color = color
         self.score = score
-        self._opponent = None
+        self._opponent = opponent
     
     def __repr__(self) -> str:
         """
@@ -54,7 +54,13 @@ class Player:
     def to_dict(self):
         return {"color": self.color, "score": self.score, "opponent": self._opponent}
     
-    def set_opponent(self, opponent: "Player") -> None:
+    def from_dict(self, dict_data):
+        self.color = dict_data["color"]
+        self.score = dict_data["score"]
+        self._opponent = dict_data["opponent"]
+        return self
+    
+    def set_opponent(self, opponent: str) -> None:
         """
         Assigns an opponent to this player.
 
@@ -64,7 +70,7 @@ class Player:
 
         self._opponent = opponent
     
-    def get_opponent(self) -> "Player | None":
+    def get_opponent(self) -> str | None:
         """
         Retrieves the opponent of this player.
 
@@ -81,6 +87,8 @@ class Player:
         Args:
             amount (int, optional): The amount to increment by. Defaults to 1.
         """
+        if amount is None:
+            amount = 0
 
         self.score += amount
 
@@ -91,6 +99,8 @@ class Player:
         Args:
             amount (int, optional): The amount to decrement by. Defaults to 1.
         """
+        if amount is None:
+            amount = 0
 
         if self.score - amount < 0:
             raise ValueError(f"Player {self.color} score underflow.")

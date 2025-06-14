@@ -3,12 +3,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 import uuid
-import json
 
 from sqlalchemy.orm import Session
 from backend.database import deps
 
-from backend.API.schemas import GameConfig, PlayerMove
+from backend.API.schemas import GameConfig
 
 from backend.database import crud, models
 from backend.database.database import engine, Base
@@ -35,5 +34,30 @@ def serve_play():
 
 @app.post("/create-game")
 def create_game(config: GameConfig, db: Session = Depends(deps.get_db)):
-    uuid = crud.create_game(db, config)
+    game = main.create_game(config.difficulty, config.height, config.width, config.full)
+    game_data = main.get_game_data(game)
+    uuid = crud.create_game(db, game_data)
     return {"game_id": uuid}
+
+@app.get("/${game_id}")
+def get_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
+    return crud.get_game(db, game_id)
+
+@app.put("/${game_id}/ai")
+def start_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
+    game_data = crud.get_game(db, game_id)
+    game = main.restore_game_from_data(game_data)
+    val = main.make_ai_move(game)
+    game_data = main.get_game_data(game)
+    crud.update_game(db, game_id, game_data)
+    return {"valid_move": val}
+
+@app.put("/${game_id}/move")
+def player_move(game_id: uuid.UUID, move: str, background_tasks: BackgroundTasks, db: Session = Depends(deps.get_db)):
+    game_data = crud.get_game(db, game_id)
+    game = main.restore_game_from_data(game_data)
+    if not main.make_player_move(game, move):
+        return {"valid_move": False}
+    game_data = main.get_game_data(game)
+    crud.update_game(db, game_id, game_data)
+    return {"valid_move": True}

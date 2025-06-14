@@ -1,7 +1,7 @@
-from sqlalchemy import ForeignKey, Column, BigInteger, Enum, Integer, Boolean, CheckConstraint
+from sqlalchemy import ForeignKey, Column, BigInteger, Enum, Integer, CheckConstraint, String, Float
 from sqlalchemy.orm import relationship
 from .database import Base
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 import uuid
 import enum
 
@@ -22,10 +22,15 @@ class DifficultyEnum(enum.Enum):
 class Game(Base):
     __tablename__ = "games_info"
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, nullable=False)
+    turns = Column(JSONB, nullable=False)
+    players = Column(JSONB, nullable=False)
+    ai_player_colors = Column(ARRAY(String), nullable=True)
+    difficulty = Column(Enum(DifficultyEnum), nullable=False)
+    komi = Column(Float, nullable=False)
+    graph = Column(JSONB, nullable=False)
     height = Column(Integer, nullable=False)
     width = Column(Integer, nullable=False)
-    full = Column(Boolean, nullable=False)
-    difficulty = Column(Enum(DifficultyEnum), nullable=False)
+    passes = Column(Integer, nullable=False)
 
     game_status = relationship("Status", back_populates="game_info")
 

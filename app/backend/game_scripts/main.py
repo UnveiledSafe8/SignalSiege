@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 import random
 
 from backend.game_scripts import game_state
@@ -8,7 +8,6 @@ def create_game(difficulty: Literal["easy", "medium", "hard", "very hard", "insa
     Initializes and stores a new GameState instance.
 
     Args:
-        game_id (str): Unique identifier for the game.
         difficulty Literal["easy", "medium", "hard", "very hard", "insane", "self"]: AI difficulty level.
         height (int): Board height (rows).
         width (int): Board width (columns).
@@ -82,5 +81,8 @@ def is_game_over(game: game_state.GameState) -> bool:
 
     return game.passes >= 2
 
-def get_game_summary(game):
-    return game.game_summary()
+def get_game_data(game):
+    return game.to_dict()
+
+def restore_game_from_data(dict_data):
+    return game_state.GameState().from_dict(dict_data)

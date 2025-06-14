@@ -32,7 +32,7 @@ class GameState:
         - valid_placement(node_id: str) -> bool: Determines if a router can be placed at the node.
     """
 
-    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"], height: int = 5, width: int = 5, full: bool = True):
+    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"] = "self", height: int = 5, width: int = 5, full: bool = True):
         """
         Initializes the game state with players, AI, board graph, and komi scoring.
 
@@ -50,14 +50,14 @@ class GameState:
         colors = utils.randomize_color(constants.colors)
         self.players = {colors[0]: player.Player(colors[0]), colors[1]: player.Player(colors[1])}
         self.ai_players = []
-        self.ai_controllers = []
 
         self.players[colors[0]].set_opponent(colors[1])
         self.players[colors[1]].set_opponent(colors[0])
 
         if difficulty != "self":
-            self.ai_controllers.append(AI.AI(self.players[colors[1]], difficulty))
-            self.ai_players.append(self.players[colors[1]])
+            ai_player = self.players[colors[1]]
+            self.players[colors[1]] = AI.AI(difficulty, ai_player.color, ai_player.score, ai_player.get_opponent())
+            self.ai_players.append(colors[1])
         
         self.difficulty = difficulty
 
@@ -108,15 +108,26 @@ class GameState:
         copied_game.height = self.height
         copied_game.width = self.width
         copied_game.players = {color: copy.deepcopy(plyer, memo) for color, plyer in self.players.items()}
-        copied_game.ai_players = [copied_game.players[ai.color] for ai in self.ai_players]
-        copied_game.ai_controllers = [AI.AI(copied_game.players[controller.color], controller.difficulty) for controller in self.ai_controllers]
+        copied_game.ai_players = self.ai_players.copy()
 
         return copied_game
     
     def to_dict(self):
-        return {"turns": self._turns,"players": {color: plyer.to_dict() for color, plyer in self.players.items()}, "ai_players": [ai.to_dict for ai in self.ai_players], 
-                "ai_controllers": [ai.to_dict() for ai in self.ai_controllers], "difficulty": self.difficulty, "komi": self.komi, 
+        return {"turns": self._turns,"players": {color: plyer.to_dict() for color, plyer in self.players.items()}, "ai_players": self.ai_players, 
+                "difficulty": self.difficulty, "komi": self.komi, 
                 "graph": {nde_id: nde.to_dict() for nde_id, nde in self.graph.items()}, "height": self.height, "width": self.width, "passes": self.passes}
+    
+    def from_dict(self, dict_data):
+        self._turns = dict_data["turns"]
+        self.ai_players = dict_data["ai_players"]
+        self.players = {color: (player.Player().from_dict(plyer) if color not in self.ai_players else AI.AI().from_dict(plyer)) for color, plyer in dict_data["players"].items()}
+        self.difficulty = dict_data["difficulty"]
+        self.komi = dict_data["komi"]
+        self.graph = {nde_id: node.Node().from_dict(nde) for nde_id, nde in dict_data["graph"].items()}
+        self.height = dict_data["height"]
+        self.width = dict_data["width"]
+        self.passes = dict_data["passes"]
+        return self
     
     def get_player_turn(self) -> player.Player:
         """
@@ -136,7 +147,7 @@ class GameState:
             bool: True if it's the AI's turn, False otherwise.
         """
          
-        return self.get_player_turn() in self.ai_players
+        return self.get_player_turn().color in self.ai_players
     
     def ai_move(self) -> Optional[str]:
         """
@@ -149,8 +160,7 @@ class GameState:
             raise ValueError(f"Can not resolve the AI's move since it is not the AI's turn")
         
         curr_ai = self.get_player_turn()
-        controller = self.ai_controllers[self.ai_players.index(curr_ai)]
-        return controller.AI_move(copy.deepcopy(self))
+        return curr_ai.AI_move(copy.deepcopy(self))
     
     def take_turn(self) -> None:
         """
@@ -250,8 +260,10 @@ class GameState:
                 self.players[self.graph[node_id].controlled].decrement_score()
                 self.graph[node_id].uncapture()
         elif not controlled and len(routers_owners_found) == 1 and len(visited) < len(self.graph) - 3:
+            owner = next(iter(routers_owners_found))
             for node_id in visited:
-                self.graph[node_id].capture(next(iter(routers_owners_found)), False)
+                self.graph[node_id].capture(owner.color, False)
+                owner.increment_score()
 
     def capture_territory(self, start_node: node.Node) -> None:
         """
@@ -307,12 +319,14 @@ class GameState:
 
         target_node = self.graph[node_id]
         if target_node.controlled:
+            self.players[target_node.controlled].decrement_score()
             target_node.uncapture()
-        target_node.capture(curr_player, True)
+        target_node.capture(curr_player.color, True)
+        curr_player.increment_score()
 
         for nbr_id in target_node.nbrs:
             nbr = self.graph[nbr_id]
-            if not nbr.router_owner and nbr.controlled != curr_player:
+            if not nbr.router_owner and nbr.controlled != curr_player.color:
                 self.update_territory_control(nbr)
             elif nbr.router_owner == curr_player.get_opponent() and self.is_group_capturable(nbr, curr_player):
                 self.capture_territory(nbr)

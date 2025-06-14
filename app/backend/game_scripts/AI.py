@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 from backend.game_scripts import player, node
 
-class AI:
+class AI(player.Player):
     """
     AI agent that selects and plays moves based on a specified difficulty level.
 
@@ -25,7 +25,7 @@ class AI:
         AI_move(graph): Chooses and returns a move based on the current difficulty level.
     """
 
-    def __init__(self, player: player.Player, difficulty: Literal["easy", "medium", "hard", "very hard", "insane"]) -> None:
+    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane"] = "easy", color: str = None, score: int = 0, opponent: str=None) -> None:
         """
         Initializes the AI player with a specific difficulty level.
         
@@ -34,12 +34,20 @@ class AI:
             difficulty (Literal["easy", "medium", "hard", "very hard", "insane"]): The difficulty level of the AI.
         """
 
-        self.player = player
-        self.color = player.color
+        self.color = color
+        self.score = score
+        self._opponent = opponent
         self.difficulty = difficulty
 
     def to_dict(self):
-        return {"player": self.player.to_dict(), "color": self.color, "difficulty": self.difficulty}
+        return {"color": self.color, "score": self.score, "opponent": self._opponent, "difficulty": self.difficulty}
+    
+    def from_dict(self, dict_data):
+        self.color = dict_data["color"]
+        self.score = dict_data["score"]
+        self._opponent = dict_data["opponent"]
+        self.difficulty = dict_data["difficulty"]
+        return self
     
     def AI_move(self, copied_game: "game_state.GameState") -> str:
         """
@@ -101,7 +109,7 @@ class AI:
             for nbr in curr_game.graph[move].nbrs:
                 if curr_game.graph[nbr].router_owner == player_self:
                     rank += WEIGHT_NEIGHBOR_OWNED
-                elif curr_game.graph[nbr].router_owner == player_self._opponent:
+                elif curr_game.graph[nbr].router_owner == player_self.get_opponent():
                     rank += WEIGHT_NEIGHBOR_ENEMY
 
             ranked_moves.append((rank, move))

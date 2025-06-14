@@ -20,7 +20,7 @@ class Node:
         destroy(): Destroy the node, removing control and router ownership.
     """
 
-    def __init__(self, node_id: str, router_owner: str = None):
+    def __init__(self, node_id: str = "0.0", router_owner: str = None, nbrs: set[str] = None):
         """
         Initializes a Node instance.
 
@@ -30,7 +30,7 @@ class Node:
         """
         
         self.id = node_id
-        self.nbrs = set()
+        self.nbrs = nbrs if nbrs else set()
         self.router_owner = router_owner
         self.controlled = router_owner
     
@@ -44,7 +44,14 @@ class Node:
         return f"<Node {self.id} | Controlled: {self.controlled} | Router: {self.router_owner}>"
     
     def to_dict(self):
-        return {"node_id": self.id, "nbr_ids": self.nbrs, "router_owner": self.router_owner, "controlled": self.controlled}
+        return {"node_id": self.id, "nbr_ids": list(self.nbrs), "router_owner": self.router_owner, "controlled": self.controlled}
+    
+    def from_dict(self, dict_data):
+        self.id = dict_data["node_id"]
+        self.nbrs = set(dict_data["nbr_ids"])
+        self.router_owner = dict_data["router_owner"]
+        self.controlled = dict_data["controlled"]
+        return self
     
     def has_router(self) -> bool:
         """
@@ -56,7 +63,7 @@ class Node:
         
         return self.router_owner is not None
 
-    def capture(self, player: player.Player, router_bool: bool = False) -> None:
+    def capture(self, player: str, router_bool: bool = False) -> None:
         """
         Captures the node for a given player.
 
@@ -73,9 +80,8 @@ class Node:
             raise ValueError(f"Cannot capture node '{self.id}' because it is already controlled by {self.controlled}.")
          
         if router_bool:
-            self.router_owner = player.color
-        self.controlled = player.color
-        player.increment_score()
+            self.router_owner = player
+        self.controlled = player
 
     def uncapture(self) -> None:
         """
