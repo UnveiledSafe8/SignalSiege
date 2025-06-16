@@ -8,164 +8,147 @@ const newSubnetButton = document.getElementById("newSubnet");
 const scoresDisplay = document.getElementById("scores");
 const title = document.querySelector("#title h1");
 let currGameBoard = null;
-let currScores = null;
-let gameStarted = false;
+let gameOver = false;
 let currTurn = false;
-startButton.addEventListener("click", () => {
-    fetch(`/${gameId}/start`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
-        .then(response => response.json())
-        .then(getGameState)
-        .then(() => {
-        startButton.style.display = "none";
-        gameStarted = true;
+async function getGame() {
+    const res = await fetch(`/${gameId}`, { method: "GET" });
+    const newData = await res.json();
+    currGameBoard = newData.game;
+    gameOver = newData.game_over;
+    await updateDisplay();
+}
+async function makeAIMove() {
+    if (currTurn) {
+        return;
+    }
+    const res = await fetch(`${gameId}/ai`, { method: "PUT" });
+    const newData = await res.json();
+    if (newData.valid_move) {
+        await getGame();
         currTurn = true;
-        passButton.style.display = "inline-block";
-        newSubnetButton.style.display = "inline-block";
-    });
-});
-passButton.addEventListener("click", () => {
-    tryMove("pass");
-});
-newSubnetButton.addEventListener("click", () => {
-    const url = window.location.href.split("/");
-    url.pop();
-    url.push("play");
-    window.location.href = url.join("/");
-});
-async function getGameState() {
-    fetch(`/${gameId}/state`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
+    }
+}
+async function makePlayerMove(move) {
+    if (!currTurn) {
+        return;
+    }
+    const res = await fetch(`${gameId}/move`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "move": move }) });
+    const newData = await res.json();
+    if (newData.valid_move) {
+        currTurn = false;
+        await getGame();
+        await makeAIMove();
+    }
+}
+function updateDisplay() {
+    scoresDisplay.textContent = "";
+    if (["easy", "medium", "hard", "very_hard", "insane"].includes(currGameBoard.difficulty)) {
+        let humanColor = null;
+        let humanScore = null;
+        let aiColor = null;
+        let aiScore = null;
+        for (const player of Object.values(currGameBoard.players)) {
+            if (!currGameBoard.ai_players.includes(player.color)) {
+                humanColor = player.color;
+                humanScore = player.score;
+            }
+            else {
+                aiColor = player.color;
+                aiScore = player.score;
+            }
         }
-    })
-        .then(response => response.json())
-        .then(async (newData) => {
-        currGameBoard = newData.board;
-        currScores = newData.scores;
-        if (newData.difficulty === "self") {
-            title.textContent = `You VS Opponent`;
+        if (!gameOver) {
+            title.textContent = `You (${humanColor}) VS ${currGameBoard.difficulty.charAt(0).toUpperCase() + currGameBoard.difficulty.slice(1)} AI (${aiColor})`;
         }
         else {
-            title.textContent = `You (${newData.human_players[0]}) VS ${newData.difficulty} AI (${newData.ai_players[0]})`;
+            if (humanScore > aiScore) {
+                title.textContent = `You (${humanColor}) Win!`;
+            }
+            else if (aiScore > humanScore) {
+                title.textContent = `You (${humanColor}) Lost.`;
+            }
+            else {
+                title.textContent = `You (${humanColor}) Tied!`;
+            }
+            passButton.style.display = "none";
         }
-        displayGame();
-        return newData;
-    });
-}
-;
-function displayGame() {
-    let index = 0;
+        scoresDisplay.textContent = `You (${humanColor}) - ${humanScore}  |  AI (${aiColor}) - ${aiScore}`;
+    }
+    else {
+        title.textContent = `You VS Other`;
+        scoresDisplay.textContent = `You () -   |  Other () - `;
+    }
     board.innerHTML = "";
-    for (const row of currGameBoard) {
-        const newRow = document.createElement("div");
-        newRow.setAttribute("id", `row-${index}`);
-        newRow.setAttribute("class", "row");
-        board.appendChild(newRow);
-        let index2 = 0;
-        for (const node of row) {
-            const newButton = document.createElement("button");
-            newButton.setAttribute("class", "node");
-            newButton.setAttribute("type", "button");
-            newButton.setAttribute("id", `${index}.${index2}`);
-            const buttonText = document.createElement("p");
-            buttonText.textContent = `${index}.${index2}`;
-            buttonText.setAttribute("class", "nodeId");
-            newButton.appendChild(buttonText);
-            newButton.appendChild(document.createElement("span"));
-            newButton.addEventListener("click", (event) => {
-                tryMove(event.currentTarget.id);
+    for (let row = 0; row < currGameBoard.height; row++) {
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+        rowDiv.id = `row-${row}`;
+        board.appendChild(rowDiv);
+        for (let col = 0; col < currGameBoard.width; col++) {
+            const nodeId = `${row}.${col}`;
+            const node = document.createElement("button");
+            node.className = "node";
+            node.id = `node-${nodeId}`;
+            node.type = "button";
+            const nodeTitle = document.createElement("p");
+            nodeTitle.className = "nodeId";
+            nodeTitle.textContent = `${nodeId}`;
+            node.appendChild(nodeTitle);
+            document.getElementById(`row-${row}`).appendChild(node);
+            document.getElementById(`node-${nodeId}`).addEventListener("click", () => {
+                makePlayerMove(`${nodeId}`);
             });
-            newButton.addEventListener("mouseenter", (event) => {
-                const children = event.target.children;
-                for (const child of children) {
-                    if (!child.classList.contains("rock")) {
+            document.getElementById(`node-${nodeId}`).addEventListener("mouseenter", (e) => {
+                for (const child of e.target.children) {
+                    if (child.classList.contains("circle")) {
                         child.style.display = "inline-block";
                     }
                 }
-                ;
             });
-            newButton.addEventListener("mouseleave", (event) => {
-                const children = event.target.children;
-                for (const child of children) {
-                    if (!child.classList.contains("rock")) {
+            document.getElementById(`node-${nodeId}`).addEventListener("mouseleave", (e) => {
+                for (const child of e.target.children) {
+                    if (child.classList.contains("circle")) {
                         child.style.display = "none";
                     }
                 }
-                ;
             });
-            document.getElementById(`row-${index}`).appendChild(newButton);
-            index2++;
-            if (node === '.') {
-                const circle = document.createElement("div");
-                circle.setAttribute("class", "circle");
-                newButton.appendChild(circle);
+            const innerEle = document.createElement("div");
+            const routerOwner = currGameBoard.graph[nodeId].router_owner;
+            const nodeController = currGameBoard.graph[nodeId].controlled;
+            if (routerOwner === "Black") {
+                innerEle.classList.add("router", "black");
             }
-            else if (node === "B") {
-                const rock = document.createElement("div");
-                rock.setAttribute("class", "rock");
-                rock.classList.add("black");
-                newButton.appendChild(rock);
+            else if (routerOwner === "White") {
+                innerEle.classList.add("router", "white");
             }
-            else if (node === "W") {
-                const rock = document.createElement("div");
-                rock.setAttribute("class", "rock");
-                rock.classList.add("white");
-                newButton.appendChild(rock);
+            else {
+                innerEle.classList.add("circle");
             }
-            else if (node == "w") {
-                const circle = document.createElement("div");
-                circle.setAttribute("class", "circle");
-                newButton.appendChild(circle);
-                newButton.classList.add("white");
+            if (nodeController == "Black") {
+                document.getElementById(`node-${nodeId}`).classList.add("black");
             }
-            else if (node == "b") {
-                const circle = document.createElement("div");
-                circle.setAttribute("class", "circle");
-                newButton.appendChild(circle);
-                newButton.classList.add("black");
+            else if (nodeController == "White") {
+                document.getElementById(`node-${nodeId}`).classList.add("white");
             }
+            document.getElementById(`node-${nodeId}`).appendChild(innerEle);
         }
-        ;
-        index++;
     }
-    ;
-    scoresDisplay.innerHTML = "";
-    for (const [color, score] of Object.entries(currScores)) {
-        scoresDisplay.textContent += ` ${color}: ${score} | `;
-    }
-    ;
-    scoresDisplay.textContent = scoresDisplay.textContent.split("").splice(0, scoresDisplay.textContent.length - 3).join("");
 }
-;
-async function tryMove(move) {
-    if (gameStarted && currTurn) {
-        currTurn = false;
-        fetch(`/${gameId}/move`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ "move": move })
-        })
-            .then((response) => response.json())
-            .then(async (newData) => {
-            if (newData.valid_move) {
-                currGameBoard = newData.board;
-                currScores = newData.scores;
-                displayGame();
-                await getGameState();
-                currTurn = true;
-            }
-            ;
-        });
-    }
-    ;
-}
-;
-getGameState();
+getGame();
+startButton.addEventListener("click", () => {
+    makeAIMove();
+    getGame();
+    startButton.style.display = "none";
+    passButton.style.display = "inline-block";
+    newSubnetButton.style.display = "inline-block";
+});
+passButton.addEventListener("click", () => {
+    makePlayerMove("pass");
+});
+newSubnetButton.addEventListener("click", () => {
+    const splitUrl = window.location.href.split("/");
+    splitUrl.pop();
+    splitUrl.push("play");
+    const newUrl = splitUrl.join("/");
+    window.location.href = newUrl;
+});

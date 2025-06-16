@@ -165,7 +165,7 @@ body {
   color: var(--text-color-dark);
 }
 
-.rock {
+.router {
   position: absolute;
   border-radius: 50%;
   border: 1px solid white;
@@ -179,11 +179,11 @@ body {
   transition: all 0.2s ease-in-out;
 }
 
-.rock.white {
+.router.white {
   background: radial-gradient(circle at 30% 30%, #fff 0%, #eee 50%, #ccc 100%);
 }
 
-.rock.black {
+.router.black {
   background: radial-gradient(circle at 30% 30%, #333 0%, black 50%, #111 100%);
 }
 

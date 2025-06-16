@@ -3,12 +3,12 @@ import random
 
 from backend.game_scripts import game_state
 
-def create_game(difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self", "random"], height: int, width: int, full: bool = True) -> game_state.GameState:
+def create_game(difficulty: Literal["easy", "medium", "hard", "very_hard", "insane", "self", "random"], height: int, width: int, full: bool = True) -> game_state.GameState:
     """
     Initializes and stores a new GameState instance.
 
     Args:
-        difficulty Literal["easy", "medium", "hard", "very hard", "insane", "self"]: AI difficulty level.
+        difficulty Literal["easy", "medium", "hard", "very_hard", "insane", "self"]: AI difficulty level.
         height (int): Board height (rows).
         width (int): Board width (columns).
         full (bool): Whether to use a fully connected board.
@@ -17,7 +17,7 @@ def create_game(difficulty: Literal["easy", "medium", "hard", "very hard", "insa
         GameState: The initialized game instance.
     """
     if difficulty == "random":
-        difficulty = random.choice(["easy", "medium", "hard", "very hard", "insane"])
+        difficulty = random.choice(["easy", "medium", "hard", "very_hard", "insane"])
 
     game = game_state.GameState(difficulty, height, width, full)
 
@@ -67,6 +67,7 @@ def make_ai_move(game: game_state.GameState) -> bool:
             if val:
                 game.passes = 0
             return val
+    return True
 
 def is_game_over(game: game_state.GameState) -> bool:
     """

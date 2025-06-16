@@ -43,7 +43,7 @@ def randomize_color(colors: set) -> list:
 
     return random.sample(colors, len(colors))
 
-def compute_komi(bot_difficulty: Literal["easy", "medium", "hard", "very hard", "insane"], height: int, width: int) -> float | None:
+def compute_komi(bot_difficulty: Literal["easy", "medium", "hard", "very_hard", "insane"], height: int, width: int) -> float | None:
     """
     Compute the komi (compensation points) based on board size and bot difficulty.
 
@@ -60,7 +60,7 @@ def compute_komi(bot_difficulty: Literal["easy", "medium", "hard", "very hard", 
         "easy": 0.7,
         "medium": 1.0,
         "hard": 1.2,
-        "very hard": 1.4,
+        "very_hard": 1.4,
         "insane": 1.8,
         "self": 1
     }

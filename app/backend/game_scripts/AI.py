@@ -14,7 +14,7 @@ class AI(player.Player):
 
     Args:
         player (Player): The player object representing this AI's side.
-        difficulty (Literal["easy", "medium", "hard", "very hard", "insane"]): Difficulty level of the AI.
+        difficulty (Literal["easy", "medium", "hard", "very_hard", "insane"]): Difficulty level of the AI.
 
     Attributes:
         player (Player): The player instance the AI controls.
@@ -25,13 +25,13 @@ class AI(player.Player):
         AI_move(graph): Chooses and returns a move based on the current difficulty level.
     """
 
-    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane"] = "easy", color: str = None, score: int = 0, opponent: str=None) -> None:
+    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very_hard", "insane"] = "easy", color: str = None, score: int = 0, opponent: str=None) -> None:
         """
         Initializes the AI player with a specific difficulty level.
         
         Args:
             player (Player): The player object this AI will control.
-            difficulty (Literal["easy", "medium", "hard", "very hard", "insane"]): The difficulty level of the AI.
+            difficulty (Literal["easy", "medium", "hard", "very_hard", "insane"]): The difficulty level of the AI.
         """
 
         self.color = color
@@ -64,12 +64,15 @@ class AI(player.Player):
         "easy": self._easy_move,
         "medium": self._medium_move,
         "hard": self._hard_move,
-        "very hard": self._very_hard_move,
+        "very_hard": self._very_hard_move,
         "insane": self._insane_move
         }
 
         if self.difficulty not in bot_difficulty_moves:
             raise ValueError(f"Invalid AI difficulty level '{self.difficulty}'. Choose from: {', '.join(bot_difficulty_moves)}.")
+        
+        if (copied_game.players[self._opponent].score < self.score and copied_game.passes > 0):
+            return "pass"
         
         return bot_difficulty_moves[self.difficulty](copied_game)  
     

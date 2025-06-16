@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from . import models
-from backend.API import schemas
 
 import json, uuid
 

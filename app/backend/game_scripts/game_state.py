@@ -10,7 +10,7 @@ class GameState:
     and the logic for placing routers, capturing territory, and determining valid moves.
 
     Args:
-        difficulty (str): AI difficulty level. Can be "easy", "medium", "hard", "very hard", "insane", or "self".
+        difficulty (str): AI difficulty level. Can be "easy", "medium", "hard", "very_hard", "insane", or "self".
         height (int): Height of the game board (number of rows).
         width (int): Width of the game board (number of columns).
         full (bool, optional): Whether to generate a fully connected board graph. Defaults to True.
@@ -32,12 +32,12 @@ class GameState:
         - valid_placement(node_id: str) -> bool: Determines if a router can be placed at the node.
     """
 
-    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very hard", "insane", "self"] = "self", height: int = 5, width: int = 5, full: bool = True):
+    def __init__(self, difficulty: Literal["easy", "medium", "hard", "very_hard", "insane", "self"] = "self", height: int = 5, width: int = 5, full: bool = True):
         """
         Initializes the game state with players, AI, board graph, and komi scoring.
 
         Args:
-            difficulty (str): Game difficulty (e.g., "easy", "medium", "hard", "very hard", "self").
+            difficulty (str): Game difficulty (e.g., "easy", "medium", "hard", "very_hard", "self").
             height (int): Height of the board.
             width (int): Width of the board.
             full (bool, optional): Whether to generate a fully connected board. Defaults to True.
@@ -170,7 +170,7 @@ class GameState:
         self._turns[self.get_player_turn().color] += 1
         self._turns["Total"] += 1
     
-    def group_has_liberties(self, start_node: node.Node, controller: player.Player) -> bool:
+    def group_has_liberties(self, start_node: node.Node, controller: str) -> bool:
         """
         Checks if a group of routers controlled by the player has any adjacent empty nodes.
 

@@ -23,13 +23,6 @@ playBtn.addEventListener("click", () => {
     splitURL = splitURL.join("/");
     redirectSmooth(splitURL);
 });
-howBtn.addEventListener("click", () => {
-    let splitURL = window.location.pathname.split("/");
-    splitURL.pop();
-    splitURL.push("guide.html");
-    splitURL = splitURL.join("/");
-    redirectSmooth(splitURL);
-});
 function redirectSmooth(targetPage) {
     document.body.style.opacity = 0;
     setTimeout(() => {
