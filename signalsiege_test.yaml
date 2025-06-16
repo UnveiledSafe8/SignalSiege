@@ -2,12 +2,12 @@ services:
   postgres:
     image: postgres
     container_name: postgres_signalsiege
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     environment:
-      - POSTGRES_USER=postgres 
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=signal_siege_database
+      - POSTGRES_USER=${SQL_USERNAME}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
     volumes:
       - signal_siege_database:/var/lib/postgresql/data
     restart: always
@@ -16,9 +16,11 @@ services:
     build: .
     container_name: app_signalsiege
     ports:
-      - "8000:8000"
+      - "8000:${SYSTEM_PORT}"
     depends_on:
       - postgres
+    env_file:
+      - .env
     restart: always
 
 volumes:
