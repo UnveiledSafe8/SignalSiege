@@ -34,3 +34,12 @@ def update_game(db: Session, id: uuid.UUID, game_data: dict):
     game.passes = game_data["passes"]
     db.commit()
     return
+
+def create_user(db: Session, user_email: str, user_hashed_password):
+    user = models.User(email=user_email, hashed_password=user_hashed_password)
+    db.add(user)
+    db.commit()
+    return user.id
+
+def get_user(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()

@@ -21,6 +21,7 @@ class DifficultyEnum(enum.Enum):
 
 class Game(Base):
     __tablename__ = "games_info"
+    
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, nullable=False)
     turns = Column(JSONB, nullable=False)
     players = Column(JSONB, nullable=False)
@@ -41,8 +42,19 @@ class Game(Base):
 
 class Status(Base):
     __tablename__ = "games_status"
+
     id = Column(BigInteger, primary_key=True, nullable=False)
     state = Column(Enum(StateEnum), nullable=False)
     game_id = Column(UUID(as_uuid=True), ForeignKey("games_info.id"))
 
     game_info = relationship("Game", back_populates="game_status")
+
+
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False, primary_key=True)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)

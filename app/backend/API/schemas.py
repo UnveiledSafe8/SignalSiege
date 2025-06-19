@@ -9,3 +9,7 @@ class GameConfig(BaseModel):
 
 class PlayerMove(BaseModel):
     move: str = Field(pattern='^(\d+\.\d+|pass)$')
+
+class UserCreate(BaseModel):
+    email: str
+    password: str

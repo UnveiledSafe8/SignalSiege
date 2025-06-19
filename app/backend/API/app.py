@@ -1,24 +1,31 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 
 import uuid
+
+from jose import jwt
 
 from sqlalchemy.orm import Session
 from backend.database import deps
 
-from backend.API.schemas import GameConfig, PlayerMove
+from backend.API.schemas import GameConfig, PlayerMove, UserCreate
 
 from backend.database import crud, models
 from backend.database.database import engine, Base
 
 from backend.game_scripts import main
 
+from . import auth
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 app.mount("/frontend/dist", StaticFiles(directory="frontend/dist"), name="frontend-dist")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @app.get("/")
 def serve_home():
@@ -63,3 +70,23 @@ def player_move(game_id: uuid.UUID, move: PlayerMove, db: Session = Depends(deps
     game_data = main.get_game_data(game)
     crud.update_game(db, game_id, game_data)
     return {"valid_move": True}
+
+@app.post("/register")
+async def read_items(user: UserCreate, db: Session = Depends(deps.get_db)):
+    existing_user = crud.get_user(db, user.email)
+    if existing_user:
+        return {"id": None}
+    
+    hashed_pw = auth.get_hashed_password(user.password)
+    user_id = crud.create_user(db, user.email, hashed_pw)
+
+    return {"id": user_id}
+
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(deps.get_db)):
+    user = crud.get_user(db, form_data.username)
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+        return {}
+    
+    token = auth.create_access_token({"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
