@@ -10,7 +10,7 @@ from jose import jwt
 from sqlalchemy.orm import Session
 from backend.database import deps
 
-from backend.API.schemas import GameConfig, PlayerMove, UserCreate
+from backend.API.schemas import GameConfig, PlayerMove, User
 
 from backend.database import crud, models
 from backend.database.database import engine, Base
@@ -25,7 +25,7 @@ app = FastAPI()
 
 app.mount("/frontend/dist", StaticFiles(directory="frontend/dist"), name="frontend-dist")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login-user")
 
 @app.get("/")
 def serve_home():
@@ -39,6 +39,18 @@ def serve_play():
 def serve_play():
     return FileResponse("frontend/dist/game.html")
 
+@app.get("/login")
+def serve_login():
+    return FileResponse("frontend/dist/login.html")
+
+@app.get("/register")
+def server_register():
+    return FileResponse("frontend/dist/register.html")
+
+@app.get("/stats")
+def server_register():
+    return FileResponse("frontend/dist/stats.html")
+
 @app.post("/create-game")
 def create_game(config: GameConfig, db: Session = Depends(deps.get_db)):
     game = main.create_game(config.difficulty, config.height, config.width, config.full)
@@ -46,13 +58,13 @@ def create_game(config: GameConfig, db: Session = Depends(deps.get_db)):
     uuid = crud.create_game(db, game_data)
     return {"game_id": uuid}
 
-@app.get("/{game_id}")
+@app.get("/get-game/{game_id}")
 def get_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
     game_data = crud.get_game(db, game_id)
     game_over = main.is_game_over(main.restore_game_from_data(game_data))
     return {"game": game_data, "game_over": game_over}
 
-@app.put("/{game_id}/ai")
+@app.put("/ai/{game_id}")
 def start_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
     game_data = crud.get_game(db, game_id)
     game = main.restore_game_from_data(game_data)
@@ -61,7 +73,7 @@ def start_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
     crud.update_game(db, game_id, game_data)
     return {"valid_move": val}
 
-@app.put("/{game_id}/move")
+@app.put("/move/{game_id}")
 def player_move(game_id: uuid.UUID, move: PlayerMove, db: Session = Depends(deps.get_db)):
     game_data = crud.get_game(db, game_id)
     game = main.restore_game_from_data(game_data)
@@ -71,8 +83,8 @@ def player_move(game_id: uuid.UUID, move: PlayerMove, db: Session = Depends(deps
     crud.update_game(db, game_id, game_data)
     return {"valid_move": True}
 
-@app.post("/register")
-async def read_items(user: UserCreate, db: Session = Depends(deps.get_db)):
+@app.post("/register-user")
+async def read_items(user: User, db: Session = Depends(deps.get_db)):
     existing_user = crud.get_user(db, user.email)
     if existing_user:
         return {"id": None}
@@ -82,11 +94,21 @@ async def read_items(user: UserCreate, db: Session = Depends(deps.get_db)):
 
     return {"id": user_id}
 
-@app.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(deps.get_db)):
-    user = crud.get_user(db, form_data.username)
-    if not user or not auth.verify_password(form_data.password, user.hashed_password):
-        return {}
+@app.post("/login-user")
+def login(user_login: User, db: Session = Depends(deps.get_db)):
+    user = crud.get_user(db, user_login.email)
+    if not user or not auth.verify_password(user_login.password, user.hashed_password):
+        return {"access_token": None, "token_type": "bearer"}
     
     token = auth.create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/get-player-stats")
+def get_stats(token: str = Depends(oauth2_scheme), db: Session = Depends(deps.get_db)):
+    payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+    user_email = payload.get("sub")
+
+    user = crud.get_user(db, user_email)
+    stats = crud.get_user_stats(db, user)
+
+    return {"stats": stats}

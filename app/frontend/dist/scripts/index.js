@@ -3,6 +3,7 @@ const playBtn = document.getElementById("play-button");
 const statsBtn = document.getElementById("stats-button");
 const howBtn = document.getElementById("how-button");
 const settingsBtn = document.getElementById("settings-button");
+const accountBtn = document.getElementById("account-button");
 const heading = document.querySelector("h1");
 const title = heading.textContent;
 document.addEventListener("mousemove", (e) => {
@@ -20,6 +21,34 @@ playBtn.addEventListener("click", () => {
     let splitURL = window.location.pathname.split("/");
     splitURL.pop();
     splitURL.push("play");
+    splitURL = splitURL.join("/");
+    redirectSmooth(splitURL);
+});
+if (window.localStorage.getItem("token")) {
+    accountBtn.textContent = "Logout";
+    accountBtn.addEventListener("click", (e) => {
+        window.localStorage.removeItem("token");
+        let splitURL = window.location.pathname.split("/");
+        splitURL.pop();
+        splitURL.push("");
+        splitURL = splitURL.join("/");
+        redirectSmooth(splitURL);
+    });
+}
+else {
+    accountBtn.textContent = "Login";
+    accountBtn.addEventListener("click", (e) => {
+        let splitURL = window.location.pathname.split("/");
+        splitURL.pop();
+        splitURL.push("login");
+        splitURL = splitURL.join("/");
+        redirectSmooth(splitURL);
+    });
+}
+statsBtn.addEventListener("click", () => {
+    let splitURL = window.location.pathname.split("/");
+    splitURL.pop();
+    splitURL.push("stats");
     splitURL = splitURL.join("/");
     redirectSmooth(splitURL);
 });

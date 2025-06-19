@@ -11,7 +11,7 @@ let gameOver = false;
 let currTurn = false;
 
 async function getGame() {
-    const res = await fetch(`/${gameId}`, {method: "GET"});
+    const res = await fetch(`/get-game/${gameId}`, {method: "GET"});
     const newData = await res.json();
     currGameBoard = newData.game;
     gameOver = newData.game_over;
@@ -23,7 +23,7 @@ async function makeAIMove() {
         return;
     }
 
-    const res = await fetch(`${gameId}/ai`, {method: "PUT"});
+    const res = await fetch(`ai/${gameId}`, {method: "PUT"});
     const newData = await res.json();
     if (newData.valid_move) {
         await getGame();
@@ -36,7 +36,7 @@ async function makePlayerMove(move: string) {
         return;
     }
 
-    const res = await fetch(`${gameId}/move`, {method: "PUT",headers: {"Content-Type": "application/json"},body: JSON.stringify({"move": move})});
+    const res = await fetch(`move/${gameId}`, {method: "PUT",headers: {"Content-Type": "application/json"},body: JSON.stringify({"move": move})});
     const newData = await res.json();
     if (newData.valid_move) {
         currTurn = false;
