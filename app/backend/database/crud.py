@@ -40,17 +40,15 @@ def create_user(db: Session, user_email: str, user_hashed_password):
     db.add(user)
     db.flush()
 
+    user_settings = models.UserSettings(user_id=user.id)
     user_stats = models.UserStats(user_id=user.id)
-    db.add(user_stats)
+    db.add_all([user_settings, user_stats])
     db.flush()
 
-    user_stats.easy_ai_stats = models.EasyAiStats()
-    user_stats.medium_ai_stats = models.MediumAiStats()
-    user_stats.hard_ai_stats = models.HardAiStats()
-    user_stats.very_hard_ai_stats = models.VeryHardAiStats()
-    user_stats.insane_ai_stats = models.InsaneAiStats()
-    db.add_all([user_stats.easy_ai_stats, user_stats.medium_ai_stats, user_stats.hard_ai_stats,
-                user_stats.very_hard_ai_stats, user_stats.insane_ai_stats])
+    difficulties = [d for d in models.DifficultyEnum]
+    for diff in difficulties:
+        ai_stat = models.AiStats(difficulty=diff, user_stats_id=user.id)
+        user.stats.ai_stats.append(ai_stat)
 
     db.commit()
     return user.id
@@ -58,19 +56,17 @@ def create_user(db: Session, user_email: str, user_hashed_password):
 def get_user(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
-def get_user_stats(db: Session, user: models.User):
+def get_user_stats(user: models.User):
+    if (not user):
+        return {}
+
+    return {ai_db.difficulty: {"difficulty": ai_db.difficulty, "wins": ai_db.wins, "losses": ai_db.losses, "min_turns": ai_db.min_turns, "max_turns": ai_db.max_turns} for ai_db in user.stats.ai_stats}
+
+def get_user_info(user: models.User):
     if not user:
         return {}
     
     return {
-        "easy_ai_wins": user.stats.easy_ai_stats.wins,
-        "easy_ai_losses": user.stats.easy_ai_stats.losses,
-        "medium_ai_wins": user.stats.medium_ai_stats.wins,
-        "medium_ai_losses": user.stats.medium_ai_stats.losses,
-        "hard_ai_wins": user.stats.hard_ai_stats.wins,
-        "hard_ai_losses": user.stats.hard_ai_stats.losses,
-        "very_hard_ai_wins": user.stats.very_hard_ai_stats.wins,
-        "very_hard_ai_losses": user.stats.very_hard_ai_stats.losses,
-        "insane_ai_wins": user.stats.insane_ai_stats.wins,
-        "insane_ai_losses": user.stats.insane_ai_stats.losses,
+        "email": user.email,
+        "username": user.username
     }

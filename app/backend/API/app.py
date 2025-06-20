@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Response, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer
 
 import uuid
 
@@ -51,6 +51,10 @@ def server_register():
 def server_register():
     return FileResponse("frontend/dist/stats.html")
 
+@app.get("/settings")
+def server_register():
+    return FileResponse("frontend/dist/settings.html")
+
 @app.post("/create-game")
 def create_game(config: GameConfig, db: Session = Depends(deps.get_db)):
     game = main.create_game(config.difficulty, config.height, config.width, config.full)
@@ -95,20 +99,54 @@ async def read_items(user: User, db: Session = Depends(deps.get_db)):
     return {"id": user_id}
 
 @app.post("/login-user")
-def login(user_login: User, db: Session = Depends(deps.get_db)):
+def login(user_login: User, response: Response, db: Session = Depends(deps.get_db)):
     user = crud.get_user(db, user_login.email)
     if not user or not auth.verify_password(user_login.password, user.hashed_password):
-        return {"access_token": None, "token_type": "bearer"}
+        return {"login": False}
     
     token = auth.create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer"}
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=False, #Change to True before deployment
+        samesite="Lax"
+    )
+
+    return {"login": True}
 
 @app.get("/get-player-stats")
-def get_stats(token: str = Depends(oauth2_scheme), db: Session = Depends(deps.get_db)):
+def get_stats(request: Request, db: Session = Depends(deps.get_db)):
+    token = request.cookies.get("access_token")
     payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
     user_email = payload.get("sub")
 
     user = crud.get_user(db, user_email)
-    stats = crud.get_user_stats(db, user)
+    stats = crud.get_user_stats(user)
 
-    return {"stats": stats}
+    return stats
+
+@app.get("/get-player-info")
+def get_info(request: Request, db: Session = Depends(deps.get_db)):
+    token = request.cookies.get("access_token")
+    payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+    user_email = payload.get("sub")
+
+    user = crud.get_user(db, user_email)
+    info = crud.get_user_info(user)
+
+    return info
+
+@app.get("/auth-me")
+def is_auth(request: Request):
+    token = request.cookies.get("access_token")
+
+    if token:
+        return {"login": True}
+    else:
+        return {"login": False}
+    
+@app.post("/logout-user")
+def logout(response: Response):
+    response.delete_cookie(key="access_token")
+    return {"logout": True}

@@ -7,9 +7,18 @@ registerBtn.addEventListener("click", async (e) => {
     const passwordInput = document.getElementById("password-input");
     const emailVal = emailInput.value;
     const passwordVal = passwordInput.value;
+    if (!emailVal.match(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/)) {
+        alert("Invalid Email");
+        return;
+    }
+    else if (!passwordVal.match(/^.{8,}$/)) {
+        alert("Invalid Password - Must Be At Least 8 Characters Long");
+        return;
+    }
     const res = await fetch("/register-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ "email": emailVal, "password": passwordVal })
     });
     const newData = await res.json();

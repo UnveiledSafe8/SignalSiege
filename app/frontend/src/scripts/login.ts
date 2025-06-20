@@ -18,16 +18,20 @@ loginBtn.addEventListener("click", async (e) => {
     const emailVal = emailInput.value;
     const passwordVal = passwordInput.value;
 
+    if (!emailVal.match(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/)) {
+        alert("Invalid Email");
+        return;
+    }
+
     const res = await fetch("/login-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({"email": emailVal, "password": passwordVal})
     });
     const newData = await res.json();
 
-    if (newData.access_token) {
-        //Change to more secure token storage
-        window.localStorage.setItem("token", newData.access_token);
+    if (newData.login) {
         let splitURL = window.location.pathname.split("/");
         splitURL.pop();
         splitURL.push("");

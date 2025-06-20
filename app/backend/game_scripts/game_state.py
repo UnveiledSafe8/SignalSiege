@@ -207,7 +207,7 @@ class GameState:
             bool: True if the group can be captured, False otherwise.
         """
 
-        return not self.group_has_liberties(start_node, attacker.get_opponent())
+        return not self.group_has_liberties(start_node, attacker.get_opponent()) #Bug: does not capture if at least one territory near start_node has a liberty even if any nearby territory might have only the start node liberty
 
     def destroy_territory_routers(self, start_node: node.Node) -> None:
         """

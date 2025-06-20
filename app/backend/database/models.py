@@ -57,70 +57,40 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False, primary_key=True)
     email = Column(String, unique=True, nullable=False)
+    username = Column(String, nullable=True, unique=True, default=None)
     hashed_password = Column(String, nullable=False)
 
+    settings = relationship("UserSettings", back_populates="user", uselist=False)
     stats = relationship("UserStats", back_populates="user", uselist=False)
+
+class UserSettings(Base):
+    __tablename__ = "settings"
+
+    id = Column(BigInteger, primary_key=True, nullable=False)
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user = relationship("User", back_populates="settings")
 
 class UserStats(Base):
     __tablename__ = "user_statistics"
 
     id = Column(BigInteger, primary_key=True, nullable=False)
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))    
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)    
     user = relationship("User", back_populates="stats")
 
-    easy_ai_stats = relationship("EasyAiStats", back_populates="all_stats", uselist=False)
-    medium_ai_stats = relationship("MediumAiStats", back_populates="all_stats", uselist=False)
-    hard_ai_stats = relationship("HardAiStats", back_populates="all_stats", uselist=False)
-    very_hard_ai_stats = relationship("VeryHardAiStats", back_populates="all_stats", uselist=False)
-    insane_ai_stats = relationship("InsaneAiStats", back_populates="all_stats", uselist=False)
+    ai_stats = relationship("AiStats", back_populates="user_stats")
 
-class EasyAiStats(Base):
-    __tablename__ = "easy_ai_statistics"
-
-    id = Column(BigInteger, primary_key=True, nullable=False)
+class AiStats(Base):
+    __tablename__ = "ai_statistics"
+    
+    id = Column(BigInteger, primary_key=True)
+    difficulty = Column(Enum(DifficultyEnum), nullable=False)
     wins = Column(Integer, default=0)
     losses = Column(Integer, default=0)
+    min_turns = Column(Integer, default=0)
+    max_turns = Column(Integer, default=0)
+    total_points_scored = Column(Float, default=0)
 
-    all_stats_id = Column(Integer, ForeignKey("user_statistics.id"))
-    all_stats = relationship("UserStats", back_populates="easy_ai_stats")
-
-class MediumAiStats(Base):
-    __tablename__ = "medium_ai_statistics"
-
-    id = Column(BigInteger, primary_key=True, nullable=False)
-    wins = Column(Integer, default=0)
-    losses = Column(Integer, default=0)
-
-    all_stats_id = Column(Integer, ForeignKey("user_statistics.id"))
-    all_stats = relationship("UserStats", back_populates="medium_ai_stats")
-
-class HardAiStats(Base):
-    __tablename__ = "hard_ai_statistics"
-
-    id = Column(BigInteger, primary_key=True, nullable=False)
-    wins = Column(Integer, default=0)
-    losses = Column(Integer, default=0)
-
-    all_stats_id = Column(Integer, ForeignKey("user_statistics.id"))
-    all_stats = relationship("UserStats", back_populates="hard_ai_stats")
-
-class VeryHardAiStats(Base):
-    __tablename__ = "very_hard_ai_statistics"
-
-    id = Column(BigInteger, primary_key=True, nullable=False)
-    wins = Column(Integer, default=0)
-    losses = Column(Integer, default=0)
-
-    all_stats_id = Column(Integer, ForeignKey("user_statistics.id"))
-    all_stats = relationship("UserStats", back_populates="very_hard_ai_stats")
-
-class InsaneAiStats(Base):
-    __tablename__ = "insane_ai_statistics"
-
-    id = Column(BigInteger, primary_key=True, nullable=False)
-    wins = Column(Integer, default=0)
-    losses = Column(Integer, default=0)
-
-    all_stats_id = Column(Integer, ForeignKey("user_statistics.id"))
-    all_stats = relationship("UserStats", back_populates="insane_ai_stats")
+    user_stats_id = Column(BigInteger, ForeignKey("user_statistics.id"), nullable=False)
+    user_stats = relationship("UserStats", back_populates="ai_stats")

@@ -28,10 +28,31 @@ playBtn.addEventListener("click", () => {
     redirectSmooth(splitURL);
 });
 
-if (window.localStorage.getItem("token")) {
+async function auth_user() {
+    const res = await fetch("/auth-me", {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+    });
+    const newData = await res.json();
+
+    return newData.login
+}
+
+(async () => {if (await auth_user()) {
     accountBtn.textContent = "Logout";
-    accountBtn.addEventListener("click", (e) => {
-        window.localStorage.removeItem("token");
+    accountBtn.addEventListener("click", async (e) => {
+        const res = await fetch("/logout-user", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" }
+        });
+        const newData = await res.json();
+
+        if (!newData.logout) {
+            return;
+        }
+
         let splitURL = window.location.pathname.split("/");
         splitURL.pop();
         splitURL.push("");
@@ -47,12 +68,20 @@ if (window.localStorage.getItem("token")) {
         splitURL = splitURL.join("/");
         redirectSmooth(splitURL);
     });
-}
+}})();
 
 statsBtn.addEventListener("click", () => {
     let splitURL = window.location.pathname.split("/");
     splitURL.pop();
     splitURL.push("stats");
+    splitURL = splitURL.join("/");
+    redirectSmooth(splitURL);
+});
+
+settingsBtn.addEventListener("click", () => {
+    let splitURL = window.location.pathname.split("/");
+    splitURL.pop();
+    splitURL.push("settings");
     splitURL = splitURL.join("/");
     redirectSmooth(splitURL);
 });
