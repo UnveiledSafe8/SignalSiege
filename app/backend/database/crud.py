@@ -5,8 +5,10 @@ import json, uuid
 
 def create_game(db: Session, game: dict):
     new_game = models.Game(turns=json.dumps(game["turns"]), players=json.dumps(game["players"]),ai_player_colors=game["ai_players"], difficulty=game["difficulty"],
-                           komi=game["komi"], graph=json.dumps(game["graph"]), height=game["height"], width=game["width"], passes=game["passes"])
+                           komi=game["komi"], graph=json.dumps(game["graph"]), height=game["height"], width=game["width"], passes=game["passes"],
+                           prev_graphs=json.dumps(game["prev_graphs"]))
     db.add(new_game)
+    db.flush()
     db.add(models.Status(state=models.StateEnum.initiated, game_id=new_game.id))
     db.commit()
     return new_game.id
@@ -22,9 +24,21 @@ def get_game(db: Session, id: uuid.UUID):
         "graph": json.loads(game.graph),
         "height": game.height,
         "width": game.width,
-        "passes": game.passes
+        "passes": game.passes,
+        "prev_graphs": json.loads(game.prev_graphs)
     }
     return game
+
+def get_game_state(db: Session, id: uuid.UUID):
+    game = db.query(models.Game).filter(models.Game.id == id).first()
+
+    return game.game_status.state
+
+def update_game_state(db: Session, id: uuid.UUID, new_state: str):
+    game = db.query(models.Game).filter(models.Game.id == id).first()
+    game.game_status.state = new_state
+
+    return
 
 def update_game(db: Session, id: uuid.UUID, game_data: dict):
     game = db.query(models.Game).filter(models.Game.id == id).first()
@@ -32,6 +46,7 @@ def update_game(db: Session, id: uuid.UUID, game_data: dict):
     game.players = json.dumps(game_data["players"])
     game.graph = json.dumps(game_data["graph"])
     game.passes = game_data["passes"]
+    game.prev_graphs = json.dumps(game_data["prev_graphs"])
     db.commit()
     return
 
@@ -60,7 +75,8 @@ def get_user_stats(user: models.User):
     if (not user):
         return {}
 
-    return {ai_db.difficulty: {"difficulty": ai_db.difficulty, "wins": ai_db.wins, "losses": ai_db.losses, "min_turns": ai_db.min_turns, "max_turns": ai_db.max_turns} for ai_db in user.stats.ai_stats}
+    return {ai_db.difficulty: {"difficulty": ai_db.difficulty, "wins": ai_db.wins, "losses": ai_db.losses, "min_turns": ai_db.min_turns, "max_turns": ai_db.max_turns}
+            for ai_db in user.stats.ai_stats}
 
 def get_user_info(user: models.User):
     if not user:
@@ -70,3 +86,14 @@ def get_user_info(user: models.User):
         "email": user.email,
         "username": user.username
     }
+
+def update_user_stat(db: Session, user: models.User, difficulty: str, stat: str, val):
+    table = db.query(user.stats.ai_stats).filter(user.stats.ai_stats.difficulty == difficulty).first()
+    if stat not in table:
+        return
+    if isinstance(table[stat], int):
+        table[stat] += val
+    else:
+        table[stat] = val
+
+    return

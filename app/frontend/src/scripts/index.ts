@@ -1,3 +1,9 @@
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        location.reload();
+    }
+});
+
 const playBtn = document.getElementById("play-button");
 const statsBtn = document.getElementById("stats-button");
 const howBtn = document.getElementById("how-button");
@@ -102,4 +108,4 @@ function typeTitle() {
 };
 
 heading.textContent = "";
-setTimeout(typeTitle, 200);
+setTimeout(typeTitle, 700);

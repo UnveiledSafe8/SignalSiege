@@ -32,6 +32,7 @@ class Game(Base):
     height = Column(Integer, nullable=False)
     width = Column(Integer, nullable=False)
     passes = Column(Integer, nullable=False)
+    prev_graphs = Column(JSONB, nullable=False)
 
     game_status = relationship("Status", back_populates="game_info", uselist=False)
 

@@ -15,12 +15,14 @@ def generate_map(height: int, width: int, full: bool = True) -> Dict[str, node.N
     Returns:
         Dict[str, node.Node]: A dictionary of nodes indexed by their ID.
     """
+    EMPTY_CHANCE = 0.05
 
     graph = {}
     directions = ((1,0), (-1,0), (0,1), (0,-1))
     for row in range(height):
         for col in range(width):
-            new_node = node.Node(f"{row}.{col}")
+            node_id = f"{row}.{col}"
+            new_node = node.Node(node_id)
             graph[new_node.id] = new_node
             for d_row, d_col in directions:
                 nbr_row, nbr_col = d_row + row, d_col + col

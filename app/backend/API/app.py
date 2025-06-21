@@ -44,15 +44,15 @@ def serve_login():
     return FileResponse("frontend/dist/login.html")
 
 @app.get("/register")
-def server_register():
+def serve_register():
     return FileResponse("frontend/dist/register.html")
 
 @app.get("/stats")
-def server_register():
+def serve_stats():
     return FileResponse("frontend/dist/stats.html")
 
 @app.get("/settings")
-def server_register():
+def serve_settings():
     return FileResponse("frontend/dist/settings.html")
 
 @app.post("/create-game")
@@ -60,31 +60,44 @@ def create_game(config: GameConfig, db: Session = Depends(deps.get_db)):
     game = main.create_game(config.difficulty, config.height, config.width, config.full)
     game_data = main.get_game_data(game)
     uuid = crud.create_game(db, game_data)
+    crud.update_game_state(db, uuid, "INITIATED")
+
     return {"game_id": uuid}
 
 @app.get("/get-game/{game_id}")
 def get_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
     game_data = crud.get_game(db, game_id)
     game_over = main.is_game_over(main.restore_game_from_data(game_data))
+    if game_over:
+        crud.update_game_state(db, game_id, "COMPLETED")
+
     return {"game": game_data, "game_over": game_over}
 
 @app.put("/ai/{game_id}")
 def start_game(game_id: uuid.UUID, db: Session = Depends(deps.get_db)):
+    if crud.get_game_state(db, game_id) == "COMPLETED":
+        return {"valid_move": False}
+    
     game_data = crud.get_game(db, game_id)
     game = main.restore_game_from_data(game_data)
     val = main.make_ai_move(game)
     game_data = main.get_game_data(game)
     crud.update_game(db, game_id, game_data)
+    crud.update_game_state(db, game_id, "ZOMBIE")
     return {"valid_move": val}
 
 @app.put("/move/{game_id}")
 def player_move(game_id: uuid.UUID, move: PlayerMove, db: Session = Depends(deps.get_db)):
+    if crud.get_game_state(db, game_id) == "COMPLETED":
+        return {"valid_move": False}
+    
     game_data = crud.get_game(db, game_id)
     game = main.restore_game_from_data(game_data)
     if not main.make_player_move(game, move.move):
         return {"valid_move": False}
     game_data = main.get_game_data(game)
     crud.update_game(db, game_id, game_data)
+    crud.update_game_state(db, game_id, "INPROGRESS")
     return {"valid_move": True}
 
 @app.post("/register-user")

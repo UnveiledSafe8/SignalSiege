@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from collections import defaultdict, deque
 import copy
 
@@ -69,6 +69,8 @@ class GameState:
         self.width = width
 
         self.passes = 0
+
+        self.prev_graphs = set()
     
     def __str__(self):
         """
@@ -109,13 +111,17 @@ class GameState:
         copied_game.width = self.width
         copied_game.players = {color: copy.deepcopy(plyer, memo) for color, plyer in self.players.items()}
         copied_game.ai_players = self.ai_players.copy()
+        copied_game.prev_graphs = copy.deepcopy(self.prev_graphs, memo)
 
         return copied_game
     
+    def to_string_graph(self):
+        return "".join([str(nde) for nde in self.graph.values()])
+    
     def to_dict(self):
         return {"turns": self._turns,"players": {color: plyer.to_dict() for color, plyer in self.players.items()}, "ai_players": self.ai_players, 
-                "difficulty": self.difficulty, "komi": self.komi, 
-                "graph": {nde_id: nde.to_dict() for nde_id, nde in self.graph.items()}, "height": self.height, "width": self.width, "passes": self.passes}
+                "difficulty": self.difficulty, "komi": self.komi, "graph": {nde_id: nde.to_dict() for nde_id, nde in self.graph.items()},
+                "height": self.height, "width": self.width, "passes": self.passes, "prev_graphs": list(self.prev_graphs)}
     
     def from_dict(self, dict_data):
         self._turns = dict_data["turns"]
@@ -127,6 +133,7 @@ class GameState:
         self.height = dict_data["height"]
         self.width = dict_data["width"]
         self.passes = dict_data["passes"]
+        self.prev_graphs = set(dict_data["prev_graphs"])
         return self
     
     def get_player_turn(self) -> player.Player:
@@ -170,7 +177,7 @@ class GameState:
         self._turns[self.get_player_turn().color] += 1
         self._turns["Total"] += 1
     
-    def group_has_liberties(self, start_node: node.Node, controller: str) -> bool:
+    def group_has_liberties(self, start_node: node.Node, controller: str, excluded: List[str] = []) -> bool:
         """
         Checks if a group of routers controlled by the player has any adjacent empty nodes.
 
@@ -183,6 +190,8 @@ class GameState:
         """
 
         visited = {start_node.id}
+        for node in excluded:
+            visited.add(node)
         queue = deque([start_node])
         while queue:
             curr = queue.popleft()
@@ -195,7 +204,7 @@ class GameState:
                     return True
         return False
 
-    def is_group_capturable(self, start_node: node.Node, attacker: player.Player) -> bool:
+    def is_group_capturable(self, start_node: node.Node, attacker: player.Player, excluded: List[str] = []) -> bool:
         """
         Determines if an opponent group is capturable from the given node.
 
@@ -207,7 +216,7 @@ class GameState:
             bool: True if the group can be captured, False otherwise.
         """
 
-        return not self.group_has_liberties(start_node, attacker.get_opponent()) #Bug: does not capture if at least one territory near start_node has a liberty even if any nearby territory might have only the start node liberty
+        return not self.group_has_liberties(start_node, attacker.get_opponent(), excluded)
 
     def destroy_territory_routers(self, start_node: node.Node) -> None:
         """
@@ -299,7 +308,20 @@ class GameState:
 
         nde = self.graph[node_id]
         curr_player = self.get_player_turn()
-        return not nde.has_router() and (self.group_has_liberties(nde, curr_player.color) or self.is_group_capturable(nde, curr_player))
+        some_group_no_liberties = False
+        for nbr in nde.nbrs:
+            if self.is_group_capturable(self.graph[nbr], curr_player, [node_id]):
+                some_group_no_liberties = True
+                break
+        
+        valid_move = not nde.has_router() and (self.group_has_liberties(nde, curr_player.color) or some_group_no_liberties)
+
+        if valid_move:
+            sim_game = copy.deepcopy(self)
+            sim_game._simulate_place_router(node_id)
+            prev_graph = sim_game.to_string_graph() in self.prev_graphs
+
+        return valid_move and not prev_graph
     
     def place_router(self, node_id: str) -> bool:
         """
@@ -332,4 +354,23 @@ class GameState:
                 self.capture_territory(nbr)
 
         self.take_turn()
+        self.prev_graphs.add(self.to_string_graph())
+
         return True
+    
+    def _simulate_place_router(self, node_id: str) -> bool:
+        curr_player = self.get_player_turn()
+
+        target_node = self.graph[node_id]
+        if target_node.controlled:
+            self.players[target_node.controlled].decrement_score()
+            target_node.uncapture()
+        target_node.capture(curr_player.color, True)
+        curr_player.increment_score()
+
+        for nbr_id in target_node.nbrs:
+            nbr = self.graph[nbr_id]
+            if not nbr.router_owner and nbr.controlled != curr_player.color:
+                self.update_territory_control(nbr)
+            elif nbr.router_owner == curr_player.get_opponent() and self.is_group_capturable(nbr, curr_player):
+                self.capture_territory(nbr)

@@ -93,8 +93,13 @@ class AI(player.Player):
         WEIGHT_BORDER = -1
 
         moves = copied_game.get_possible_moves()
+        considered_moves = []
         ranked_moves = []
         for move in moves:
+            if copied_game.graph[move].controlled == self.color:
+                continue
+
+            considered_moves.append(move)
             curr_game = copy.deepcopy(copied_game)
             curr_game.place_router(move)
 
@@ -122,10 +127,10 @@ class AI(player.Player):
             exp_ranks = [math.exp(rank - max_rank) for rank, _ in ranked_moves]
             total = sum(exp_ranks)
 
-            moves = [move[1] for move in ranked_moves]
+            considered_moves = [move[1] for move in ranked_moves]
             weights = [e/total for e in exp_ranks]
 
-        return random.choices(moves, weights, k=1)[0] if moves else "pass"
+        return random.choices(considered_moves, weights, k=1)[0] if considered_moves else "pass"
 
     def _medium_move(self, moves) -> str:
         """

@@ -1,5 +1,3 @@
-from backend.game_scripts import player
-
 class Node:
     """
     Represents a node in the game graph.
