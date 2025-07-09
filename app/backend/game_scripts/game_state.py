@@ -310,12 +310,14 @@ class GameState:
         curr_player = self.get_player_turn()
         some_group_no_liberties = False
         for nbr in nde.nbrs:
-            if self.is_group_capturable(self.graph[nbr], curr_player, [node_id]):
+            nbr = self.graph[nbr]
+            if self.is_group_capturable(nbr, curr_player, [node_id]):
                 some_group_no_liberties = True
                 break
         
         valid_move = not nde.has_router() and (self.group_has_liberties(nde, curr_player.color) or some_group_no_liberties)
 
+        prev_graph = False
         if valid_move:
             sim_game = copy.deepcopy(self)
             sim_game._simulate_place_router(node_id)

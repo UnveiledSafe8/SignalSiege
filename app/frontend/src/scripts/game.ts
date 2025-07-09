@@ -32,7 +32,7 @@ async function makeAIMove() {
 }
 
 async function makePlayerMove(move: string) {
-    if (!currTurn) {
+    if (!currTurn || gameOver) {
         return;
     }
 

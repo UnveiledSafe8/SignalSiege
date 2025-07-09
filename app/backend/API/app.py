@@ -19,6 +19,8 @@ from backend.game_scripts import main
 
 from . import auth
 
+import os
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -122,7 +124,7 @@ def login(user_login: User, response: Response, db: Session = Depends(deps.get_d
         key="access_token",
         value=token,
         httponly=True,
-        secure=False, #Change to True before deployment
+        secure=os.getenv("SECURE_HTTP"),
         samesite="Lax"
     )
 

@@ -29,7 +29,7 @@ async function makeAIMove() {
     }
 }
 async function makePlayerMove(move) {
-    if (!currTurn) {
+    if (!currTurn || gameOver) {
         return;
     }
     const res = await fetch(`move/${gameId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "move": move }) });
