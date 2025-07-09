@@ -16,7 +16,7 @@ services:
     build: .
     container_name: app_signalsiege
     ports:
-      - "8000:${SYSTEM_PORT}"
+      - "${SYSTEM_PORT}:8000"
     depends_on:
       - postgres
     env_file:
